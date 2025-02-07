@@ -6,7 +6,6 @@ import { createTRPCReact } from "@trpc/react-query";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import { useState } from "react";
 import SuperJSON from "superjson";
-
 import { type AppRouter } from "@/server/api/root";
 import { createQueryClient } from "./query-client";
 
@@ -16,7 +15,7 @@ const getQueryClient = () => {
         // Server: always make a new query client
         return createQueryClient();
     }
-    // Browser: use singleton pattern to keep the same query client
+    // Browser: use singleton to keep the same query client
     return (clientQueryClientSingleton ??= createQueryClient());
 };
 
