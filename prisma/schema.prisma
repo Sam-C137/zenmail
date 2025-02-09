@@ -10,19 +10,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Session {
+  id        String   @id
+  userId    Int
+  expiresAt DateTime
 
-  @@index([name])
+  user User @relation(references: [id], fields: [userId], onDelete: Cascade)
 }
 
 model User {
-  id        String  @id @default(cuid())
+  id        Int     @id @default(autoincrement())
   email     String  @unique
   firstName String
   lastName  String?
   imageUrl  String?
+  googleId  String? @unique
+  githubId  Int?    @unique
+
+  session Session[]
 }

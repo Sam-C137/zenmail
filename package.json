@@ -22,8 +22,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.11.1",
     "@hookform/resolvers": "^3.10.0",
+    "@oslojs/crypto": "^1.0.1",
+    "@oslojs/encoding": "^1.1.0",
     "@prisma/client": "^5.14.0",
     "@radix-ui/react-slot": "^1.1.2",
     "@t3-oss/env-nextjs": "^0.10.1",
@@ -31,6 +32,7 @@
     "@trpc/client": "^11.0.0-rc.446",
     "@trpc/react-query": "^11.0.0-rc.446",
     "@trpc/server": "^11.0.0-rc.446",
+    "arctic": "^3.2.4",
     "arktype": "^2.0.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
