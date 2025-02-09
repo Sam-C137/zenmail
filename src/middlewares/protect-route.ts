@@ -1,31 +1,21 @@
 import { type MiddlewareFactory } from "@/middlewares/stack-middlewares";
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-const publicRoutes = [
-    "/sign-in(.*)",
-    "/sign-up(.*)",
-    "/",
-    "/api/clerk/webhook",
-];
+const publicRoutes = ["/sign-in(.*)", "/sign-up(.*)", "/"];
 
 export const createProtectRouteMiddleware: MiddlewareFactory = (next) => {
-    return async function (request: NextRequest): Promise<NextResponse> {
+    return async function (request, event): Promise<NextResponse> {
         const token = request.cookies.get("session")?.value ?? null;
-        if (token === null) {
-            if (
-                !publicRoutes.some((route) =>
-                    new RegExp(route).test(request.url),
-                )
-            ) {
-                return new NextResponse(null, {
-                    status: 302,
-                    headers: {
-                        Location: "/sign-in",
-                    },
-                });
-            }
+
+        if (
+            token === null &&
+            !publicRoutes.some((route) => new RegExp(route).test(request.url))
+        ) {
+            return NextResponse.redirect(
+                new URL("/sign-in", request.nextUrl.origin),
+            );
         }
 
-        return NextResponse.next();
+        return next(request, event) as NextResponse;
     };
 };
