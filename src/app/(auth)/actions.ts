@@ -16,5 +16,5 @@ export async function logout(): Promise<unknown> {
 
     await invalidateSession(session.id);
     await deleteSessionTokenCookie();
-    return redirect("/login");
+    return redirect("/sign-in");
 }

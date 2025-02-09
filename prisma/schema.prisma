@@ -16,16 +16,32 @@ model Session {
   expiresAt DateTime
 
   user User @relation(references: [id], fields: [userId], onDelete: Cascade)
+
+  @@map("sessions")
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
-  email     String  @unique
-  firstName String
-  lastName  String?
-  imageUrl  String?
-  googleId  String? @unique
-  githubId  Int?    @unique
+  id           Int     @id @default(autoincrement())
+  email        String  @unique
+  firstName    String
+  lastName     String?
+  imageUrl     String?
+  passwordHash String?
+  googleId     String? @unique
+  githubId     Int?    @unique
 
-  session Session[]
+  session             Session[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id     String @id @unique
+  userId Int
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+
+  @@map("password_reset_tokens")
 }
