@@ -15,6 +15,9 @@ export const env = createEnv({
         GOOGLE_CLIENT_SECRET: z.string().min(1),
         GITHUB_CLIENT_ID: z.string().min(1),
         GITHUB_CLIENT_SECRET: z.string().min(1),
+        AURINKO_CLIENT_ID: z.string().min(1),
+        AURINKO_CLIENT_SECRET: z.string().min(1),
+        AURINKO_SIGNIN_SECRET: z.string().min(1),
         MICROSOFT_CLIENT_TENANT_ID: z.string().min(1),
         MICROSOFT_CLIENT_ID: z.string().min(1),
         MICROSOFT_CLIENT_SECRET: z.string().min(1),
@@ -48,6 +51,9 @@ export const env = createEnv({
         MICROSOFT_CLIENT_ID: process.env.MICROSOFT_CLIENT_ID,
         MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET,
         RESEND_API_KEY: process.env.RESEND_API_KEY,
+        AURINKO_CLIENT_ID: process.env.AURINKO_CLIENT_ID,
+        AURINKO_CLIENT_SECRET: process.env.AURINKO_CLIENT_SECRET,
+        AURINKO_SIGNIN_SECRET: process.env.AURINKO_SIGNIN_SECRET,
     },
     /**
      * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
