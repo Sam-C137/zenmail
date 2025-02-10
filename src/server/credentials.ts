@@ -1,7 +1,10 @@
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 import { db } from "@/server/db";
-import { compare } from "bcrypt";
+import { compare, hash } from "bcrypt";
 
+/**
+ * RESET PASSWORD
+ */
 export async function createPasswordResetToken(
     userId: number,
 ): Promise<string> {
@@ -80,4 +83,66 @@ export async function isSamePassword(
     }
 
     return compare(password, user.passwordHash);
+}
+
+/**
+ *  REGISTER
+ */
+export async function createEmailVerificationToken(
+    email: string,
+): Promise<string> {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const hashed = await hash(otp, 10);
+
+    await db.emailVerificationToken.deleteMany({
+        where: { email },
+    });
+
+    await db.emailVerificationToken.create({
+        data: {
+            email,
+            otp: hashed,
+            expiresAt,
+        },
+    });
+
+    /**
+     * TODO sendEmail(email, `Your OTP is: ${otp}`)
+     */
+
+    return otp;
+}
+
+export async function verifyEmailVerificationToken(
+    email: string,
+    submittedOtp: string,
+): Promise<{ success: boolean; message?: string }> {
+    const tokenRecord = await db.emailVerificationToken.findUnique({
+        where: { email },
+    });
+
+    if (!tokenRecord) {
+        return { success: false, message: "No OTP found for this email." };
+    }
+
+    if (tokenRecord.expiresAt < new Date()) {
+        await db.emailVerificationToken.delete({
+            where: { email },
+        });
+        return {
+            success: false,
+            message: "OTP has expired. Please request a new one.",
+        };
+    }
+
+    if (tokenRecord.otp !== submittedOtp) {
+        return { success: false, message: "Invalid OTP. Please try again." };
+    }
+
+    await db.emailVerificationToken.delete({
+        where: { email },
+    });
+
+    return { success: true };
 }
