@@ -15,6 +15,9 @@ export const env = createEnv({
         GOOGLE_CLIENT_SECRET: z.string().min(1),
         GITHUB_CLIENT_ID: z.string().min(1),
         GITHUB_CLIENT_SECRET: z.string().min(1),
+        MICROSOFT_CLIENT_TENANT_ID: z.string().min(1),
+        MICROSOFT_CLIENT_ID: z.string().min(1),
+        MICROSOFT_CLIENT_SECRET: z.string().min(1),
         RESEND_API_KEY: z.string().min(1),
     },
 
@@ -41,6 +44,9 @@ export const env = createEnv({
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
         GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
         GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
+        MICROSOFT_CLIENT_TENANT_ID: process.env.MICROSOFT_CLIENT_TENANT_ID,
+        MICROSOFT_CLIENT_ID: process.env.MICROSOFT_CLIENT_ID,
+        MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET,
         RESEND_API_KEY: process.env.RESEND_API_KEY,
     },
     /**

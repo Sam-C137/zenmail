@@ -1,19 +1,19 @@
 import { generateCodeVerifier, generateState } from "arctic";
+import { microsoft } from "@/server/oauth";
 import { cookies } from "next/headers";
-import { google } from "@/server/oauth";
 
 export async function GET() {
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
 
-    const url = google.createAuthorizationURL(state, codeVerifier, [
+    const url = microsoft.createAuthorizationURL(state, codeVerifier, [
         "openid",
         "profile",
         "email",
     ]);
 
     const cookiesStore = await cookies();
-    cookiesStore.set("google_oauth_state", state, {
+    cookiesStore.set("microsoft_oauth_state", state, {
         path: "/",
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
@@ -21,7 +21,7 @@ export async function GET() {
         sameSite: "lax",
     });
 
-    cookiesStore.set("google_oauth_code_verifier", codeVerifier, {
+    cookiesStore.set("microsoft_oauth_code_verifier", codeVerifier, {
         path: "/",
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
