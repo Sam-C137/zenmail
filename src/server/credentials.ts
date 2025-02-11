@@ -1,6 +1,8 @@
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 import { db } from "@/server/db";
 import { compare, hash } from "bcrypt";
+import { resend } from "@/server/resend";
+import AccountVerificationEmail from "@/components/emails/account-verification-email";
 
 /**
  * RESET PASSWORD
@@ -88,9 +90,10 @@ export async function isSamePassword(
 /**
  *  REGISTER
  */
-export async function createEmailVerificationToken(
-    email: string,
-): Promise<string> {
+export async function sendEmailVerification(email: string): Promise<{
+    success: boolean;
+    error?: string;
+}> {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     const hashed = await hash(otp, 10);
@@ -107,23 +110,35 @@ export async function createEmailVerificationToken(
         },
     });
 
-    /**
-     * TODO sendEmail(email, `Your OTP is: ${otp}`)
-     */
+    const { error } = await resend.emails.send({
+        from: "zenmail <zenmail@mail.sam-c137.space>",
+        to: [email],
+        subject: "Email Verification",
+        react: AccountVerificationEmail({ code: otp }),
+    });
 
-    return otp;
+    if (error) {
+        return {
+            success: false,
+            error: error.message,
+        };
+    }
+
+    return {
+        success: true,
+    };
 }
 
 export async function verifyEmailVerificationToken(
     email: string,
     submittedOtp: string,
-): Promise<{ success: boolean; message?: string }> {
+): Promise<{ success: boolean; error?: string }> {
     const tokenRecord = await db.emailVerificationToken.findUnique({
         where: { email },
     });
 
     if (!tokenRecord) {
-        return { success: false, message: "No OTP found for this email." };
+        return { success: false, error: "No OTP found for this email." };
     }
 
     if (tokenRecord.expiresAt < new Date()) {
@@ -132,12 +147,14 @@ export async function verifyEmailVerificationToken(
         });
         return {
             success: false,
-            message: "OTP has expired. Please request a new one.",
+            error: "OTP has expired. Please request a new one.",
         };
     }
 
-    if (tokenRecord.otp !== submittedOtp) {
-        return { success: false, message: "Invalid OTP. Please try again." };
+    const isValidOtp = await compare(submittedOtp, tokenRecord.otp);
+
+    if (!isValidOtp) {
+        return { success: false, error: "Invalid OTP. Please try again." };
     }
 
     await db.emailVerificationToken.delete({

@@ -5,12 +5,17 @@ export const SignInSchema = type({
     password: "string>4",
 });
 
+export const OTPSchema = type({
+    code: "5<string.numeric<7",
+    email: "string.email",
+});
+
 export const SignUpSchema = type({
     email: "string.email",
     password: type("string>4").configure({
         actual: () => "",
     }),
     firstName: type("string>1 & string.alpha").configure({
-        message: () => "Only letters, numbers, - and _ allowed",
+        message: () => "Only alphabetic characters allowed",
     }),
 });
