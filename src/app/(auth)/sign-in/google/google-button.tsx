@@ -9,7 +9,7 @@ export function GoogleButton() {
                 className="flex w-full font-light text-sm dark:text-foreground text-muted-foreground items-center gap-2"
             >
                 <img
-                    src="https://img.clerk.com/static/google.svg?width=160"
+                    src="/static/google-icon.svg"
                     alt="google"
                     width={16}
                     height={16}

@@ -9,7 +9,7 @@ export function GithubButton() {
                 className="flex w-full font-light text-sm text-muted-foreground dark:text-foreground items-center gap-2"
             >
                 <img
-                    src="https://img.clerk.com/static/github.svg?width=160"
+                    src="/static/github-icon.svg"
                     alt="github"
                     width={16}
                     height={16}

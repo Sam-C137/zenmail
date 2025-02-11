@@ -1,6 +1,6 @@
 "use server";
 
-import { SignUpSchema } from "@/lib/validators";
+import { OTPSchema, SignUpSchema } from "@/lib/validators";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
 import { type } from "arktype";
@@ -11,6 +11,92 @@ import {
     setSessionTokenCookie,
 } from "@/server/session";
 import { hash } from "bcrypt";
+import {
+    sendEmailVerification,
+    verifyEmailVerificationToken,
+} from "@/server/credentials";
+
+const emailSchema = SignUpSchema.pick("email");
+export async function verifyEmail(
+    credentials: typeof emailSchema.infer,
+): Promise<{
+    success: boolean;
+    error?: string;
+}> {
+    try {
+        const data = emailSchema(credentials);
+        if (data instanceof type.errors) {
+            return {
+                success: false,
+                error: data.message,
+            };
+        }
+        const { email } = data;
+        const existingUser = await db.user.findUnique({
+            where: {
+                email,
+            },
+        });
+
+        if (existingUser) {
+            return {
+                success: false,
+                error: "User already exists",
+            };
+        }
+
+        const { success, error } = await sendEmailVerification(email);
+
+        return {
+            success,
+            error,
+        };
+    } catch (e) {
+        console.error(e);
+        return {
+            success: false,
+            error: "Something went wrong. Please try again",
+        };
+    }
+}
+
+export async function confirmOtp(payload: typeof OTPSchema.infer): Promise<{
+    success: boolean;
+    error?: string;
+}> {
+    try {
+        const data = OTPSchema(payload);
+        if (data instanceof type.errors) {
+            return {
+                success: false,
+                error: data.message,
+            };
+        }
+
+        const { email, code } = data;
+        const { success, error } = await verifyEmailVerificationToken(
+            email,
+            code,
+        );
+
+        if (error) {
+            return {
+                success: false,
+                error,
+            };
+        }
+
+        return {
+            success,
+        };
+    } catch (e) {
+        console.error(e);
+        return {
+            success: false,
+            error: "Something went wrong. Please try again",
+        };
+    }
+}
 
 export async function register(
     credentials: typeof SignUpSchema.infer,
@@ -24,20 +110,8 @@ export async function register(
                 error: data.message,
             };
         }
+
         const { email, password, firstName } = data;
-
-        const existingUser = await db.user.findUnique({
-            where: {
-                email,
-            },
-        });
-
-        if (existingUser) {
-            return {
-                error: "User already exists",
-            };
-        }
-
         const passwordHash = await hash(password, 10);
 
         const user = await db.user.create({
