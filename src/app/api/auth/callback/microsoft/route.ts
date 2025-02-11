@@ -1,7 +1,7 @@
-import { cookies } from "next/headers";
 import { type NextRequest } from "next/server";
+import { cookies } from "next/headers";
+import { microsoft } from "@/server/oauth";
 import { decodeIdToken, OAuth2RequestError } from "arctic";
-import { google } from "@/server/oauth";
 import { type } from "arktype";
 import { db } from "@/server/db";
 import {
@@ -10,12 +10,10 @@ import {
     setSessionTokenCookie,
 } from "@/server/session";
 
-const googleUserClaims = type({
+const microsoftUserClaims = type({
     sub: "string",
     name: "string",
     email: "string.email",
-    given_name: "string",
-    "family_name?": "string",
 });
 
 export async function GET(req: NextRequest) {
@@ -23,9 +21,9 @@ export async function GET(req: NextRequest) {
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
     const cookieStore = await cookies();
-    const storedState = cookieStore.get("google_oauth_state")?.value ?? null;
+    const storedState = cookieStore.get("microsoft_oauth_state")?.value ?? null;
     const codeVerifier =
-        cookieStore.get("google_oauth_code_verifier")?.value ?? null;
+        cookieStore.get("microsoft_oauth_code_verifier")?.value ?? null;
 
     if (
         code === null ||
@@ -40,25 +38,23 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const tokens = await google.validateAuthorizationCode(
+        const tokens = await microsoft.validateAuthorizationCode(
             code,
             codeVerifier,
         );
         const claims = decodeIdToken(tokens.idToken());
-        const validClaims = googleUserClaims(claims);
+        const validClaims = microsoftUserClaims(claims);
         if (validClaims instanceof type.errors) {
             return new Response(null, {
                 status: 400,
             });
         }
 
-        const googleId = validClaims.sub;
+        const microsoftId = validClaims.sub;
         const email = validClaims.email;
 
         const existingUser = await db.user.findUnique({
-            where: {
-                email,
-            },
+            where: { email },
         });
 
         if (existingUser !== null) {
@@ -75,10 +71,10 @@ export async function GET(req: NextRequest) {
 
         const user = await db.user.create({
             data: {
-                googleId,
+                microsoftId,
                 email,
-                firstName: validClaims.given_name,
-                lastName: validClaims.family_name,
+                firstName: validClaims.name.split(" ").at(0) ?? "Alias",
+                lastName: validClaims.name.split(" ").at(-1) ?? null,
             },
         });
 

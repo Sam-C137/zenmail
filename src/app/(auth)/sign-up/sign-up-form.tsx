@@ -15,7 +15,7 @@ import {
 import { FloatingLabelInput } from "@/components/ui/floating-label-input";
 import { useState, useTransition } from "react";
 import {
-    ButtonStates,
+    type ButtonStates,
     SubmitButton,
 } from "@/app/(auth)/@components/submit-button";
 import {
@@ -109,7 +109,7 @@ function EmailForm({ onEmailSent }: EmailFormProps) {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 {error && (
                     <p className="text-center text-[1rem] text-destructive">
                         {error}
@@ -130,7 +130,7 @@ function EmailForm({ onEmailSent }: EmailFormProps) {
                                     wrapper: "w-[99%] mx-auto",
                                 }}
                             />
-                            <FormMessage />
+                            <FormMessage className="absolute -bottom-5" />
                         </FormItem>
                     )}
                 />
@@ -235,7 +235,7 @@ function RegisterForm({ email }: RegisterFormProps) {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 {error && (
                     <p className="text-center text-[1rem] text-destructive">
                         {error}
@@ -256,7 +256,7 @@ function RegisterForm({ email }: RegisterFormProps) {
                                     wrapper: "w-[99%] mx-auto",
                                 }}
                             />
-                            <FormMessage />
+                            <FormMessage className="absolute -bottom-5" />
                         </FormItem>
                     )}
                 />
@@ -275,7 +275,7 @@ function RegisterForm({ email }: RegisterFormProps) {
                                     wrapper: "w-[99%] mx-auto",
                                 }}
                             />
-                            <FormMessage />
+                            <FormMessage className="absolute -bottom-5" />
                         </FormItem>
                     )}
                 />

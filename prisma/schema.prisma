@@ -29,6 +29,7 @@ model User {
   passwordHash String?
   googleId     String? @unique
   githubId     Int?    @unique
+  microsoftId  String? @unique
 
   session             Session[]
   passwordResetTokens PasswordResetToken[]
