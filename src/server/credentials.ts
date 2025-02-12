@@ -3,16 +3,22 @@ import { db } from "@/server/db";
 import { compare, hash } from "bcrypt";
 import { resend } from "@/server/resend";
 import AccountVerificationEmail from "@/components/emails/account-verification-email";
+import ResetPasswordEmail from "@/components/emails/reset-password-email";
+
+const FIFTEEN_MINUTES = 1000 * 60 * 15;
 
 /**
  * RESET PASSWORD
  */
-export async function createPasswordResetToken(
+export async function sendPasswordResetCode(
     userId: number,
-): Promise<string> {
-    const bytes = new Uint8Array(20);
-    crypto.getRandomValues(bytes);
-    const tokenId = encodeBase32LowerCaseNoPadding(bytes);
+    email: string,
+): Promise<{
+    success: boolean;
+    error?: string;
+}> {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashed = await hash(code, 10);
 
     await db.$transaction(async (tx) => {
         await tx.passwordResetToken.deleteMany({
@@ -23,45 +29,55 @@ export async function createPasswordResetToken(
 
         await tx.passwordResetToken.create({
             data: {
-                id: tokenId,
+                otp: hashed,
                 userId,
-                expiresAt: new Date(Date.now() + 1000 * 60 * 15),
+                email,
+                expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
             },
         });
     });
 
-    return tokenId;
+    const { error } = await resend.emails.send({
+        from: "zenmail <zenmail@mail.sam-c137.space>",
+        to: [email],
+        subject: "Password Reset",
+        react: ResetPasswordEmail({ code }),
+    });
+
+    if (error) {
+        return {
+            success: false,
+            error: error.message,
+        };
+    }
+
+    return {
+        success: true,
+    };
 }
 
 export async function verifyPasswordResetToken(
-    tokenId: string,
-): Promise<{ success: boolean; message?: string; userId?: number }> {
+    token: string,
+    email: string,
+): Promise<{ success: boolean; error?: string; userId?: number }> {
     const resetToken = await db.passwordResetToken.findUnique({
         where: {
-            id: tokenId,
+            email,
         },
     });
 
-    if (!resetToken || resetToken.id !== tokenId) {
+    if (!resetToken || !(await compare(token, resetToken.otp as string))) {
         return {
             success: false,
-            message:
-                "Password reset token is invalid, please request a new one",
+            error: "Password reset token is invalid, please request a new one",
         };
     }
 
     if (resetToken.expiresAt < new Date()) {
         return {
             success: false,
-            message:
-                "Password reset token has expired, please request a new one",
+            error: "Password reset token has expired, please request a new one",
         };
-    }
-
-    if (resetToken) {
-        await db.passwordResetToken.delete({
-            where: { id: tokenId },
-        });
     }
 
     return {

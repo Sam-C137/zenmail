@@ -19,3 +19,22 @@ export const SignUpSchema = type({
         message: () => "Only alphabetic characters allowed",
     }),
 });
+
+export const ResetPasswordSchema = type({
+    userId: "number",
+    password: type("string>4").configure({
+        actual: () => "",
+    }),
+    passwordConfirm: type("string>4").configure({
+        actual: () => "",
+    }),
+}).narrow((data, ctx) => {
+    if (data.password === data.passwordConfirm) {
+        return true;
+    }
+    return ctx.reject({
+        expected: "identical to password",
+        actual: "",
+        path: ["passwordConfirm"],
+    });
+});

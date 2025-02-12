@@ -1,8 +1,5 @@
-import { GoogleButton } from "@/app/(auth)/sign-in/google/google-button";
-import { GithubButton } from "@/app/(auth)/sign-in/github/github-button";
-import { MicrosoftButton } from "@/app/(auth)/sign-in/microsoft/microsoft-button";
-import { SignInForm } from "@/app/(auth)/sign-in/sign-in-form";
 import Link from "next/link";
+import { ResetPasswordForm } from "@/app/(auth)/reset-password/reset-password-form";
 
 export default function Page() {
     return (
@@ -11,28 +8,18 @@ export default function Page() {
                 <div className="w-full space-y-6 p-6">
                     <div>
                         <h1 className="text-center text-lg mb-1 font-bold">
-                            Sign in to zenmail
+                            Reset your password
                         </h1>
                         <p className="text-center text-sm text-muted-foreground">
-                            Welcome back! Please sign in to continue
+                            Let&#39;s help you get back into your account.
                         </p>
                     </div>
-                    <div className="flex gap-2">
-                        <GoogleButton />
-                        <MicrosoftButton />
-                        <GithubButton />
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="h-px flex-1 bg-muted"></div>
-                        <span className="text-muted-foreground">or</span>
-                        <div className="h-px flex-1 bg-muted"></div>
-                    </div>
-                    <SignInForm />
+                    <ResetPasswordForm />
                     <Link
-                        href="/reset-password"
+                        href="/sign-in"
                         className="text-sm text-right text-muted-foreground block !mt-2 hover:underline"
                     >
-                        I forgot my password
+                        Back to login
                     </Link>
                 </div>
                 <hr />
