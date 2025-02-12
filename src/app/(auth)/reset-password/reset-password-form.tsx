@@ -1,8 +1,13 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { arktypeResolver } from "@hookform/resolvers/arktype";
-import { OTPSchema, SignUpSchema } from "@/lib/validators";
+import {
+    type ButtonStates,
+    SubmitButton,
+} from "@/app/(auth)/@components/submit-button";
+import { sleep } from "@/lib/utils";
 import {
     Form,
     FormControl,
@@ -13,55 +18,53 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { FloatingLabelInput } from "@/components/ui/floating-label-input";
-import { useState, useTransition } from "react";
 import {
-    type ButtonStates,
-    SubmitButton,
-} from "@/app/(auth)/@components/submit-button";
-import {
-    confirmOtp,
-    register,
-    verifyEmail,
-} from "@/app/(auth)/sign-up/actions";
+    requestPasswordReset,
+    resetPassword,
+    verifyPasswordResetOtp,
+} from "@/app/(auth)/reset-password/actions";
+import { type } from "arktype";
+import { OTPSchema, ResetPasswordSchema } from "@/lib/validators";
 import {
     InputOTP,
     InputOTPGroup,
     InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { AnimatePresence, motion } from "motion/react";
-import { sleep } from "@/lib/utils";
 
-export function SignUpForm() {
-    const [registrationStage, setRegistrationStage] = useState<
-        "email" | "otp" | "credentials"
-    >("email");
-    const [email, setEmail] = useState<string>("");
+export function ResetPasswordForm() {
+    const [resetStage, setResetStage] = useState<"email" | "otp" | "password">(
+        "email",
+    );
+    const [userId, setUserId] = useState(0);
+    const [email, setEmail] = useState("");
 
     const stageMapping = {
         email: (
             <EmailForm
                 onEmailSent={(email) => {
                     setEmail(email);
-                    setRegistrationStage("otp");
+                    setResetStage("otp");
                 }}
             />
         ),
         otp: (
             <OTPForm
-                onOtpConfirmed={() => {
-                    setRegistrationStage("credentials");
-                }}
                 email={email}
+                onOtpConfirmed={(userId) => {
+                    setUserId(userId);
+                    setResetStage("password");
+                }}
             />
         ),
-        credentials: <RegisterForm email={email} />,
+        password: <PasswordFieldsForm userId={userId} />,
     };
 
     return (
         <div className="relative overflow-hidden w-full">
             <AnimatePresence initial={false} mode="popLayout">
                 <motion.div
-                    key={registrationStage}
+                    key={resetStage}
                     initial={{ x: "100%" }}
                     animate={{ x: 0 }}
                     exit={{ x: "-100%" }}
@@ -72,7 +75,7 @@ export function SignUpForm() {
                     }}
                     className="w-full"
                 >
-                    {stageMapping[registrationStage]}
+                    {stageMapping[resetStage]}
                 </motion.div>
             </AnimatePresence>
         </div>
@@ -84,7 +87,11 @@ interface EmailFormProps {
 }
 function EmailForm({ onEmailSent }: EmailFormProps) {
     const form = useForm({
-        resolver: arktypeResolver(SignUpSchema.pick("email")),
+        resolver: arktypeResolver(
+            type({
+                email: "string.email",
+            }),
+        ),
         defaultValues: {
             email: "",
         },
@@ -94,7 +101,7 @@ function EmailForm({ onEmailSent }: EmailFormProps) {
 
     async function onSubmit({ email }: { email: string }) {
         setButtonState("loading");
-        const { error } = await verifyEmail({ email });
+        const { error } = await requestPasswordReset({ email });
 
         if (error) {
             setError(error);
@@ -149,7 +156,7 @@ function EmailForm({ onEmailSent }: EmailFormProps) {
 }
 
 interface OTPFormProps {
-    onOtpConfirmed: () => void;
+    onOtpConfirmed: (userId: number) => void;
     email: string;
 }
 function OTPForm({ onOtpConfirmed, email }: OTPFormProps) {
@@ -157,19 +164,19 @@ function OTPForm({ onOtpConfirmed, email }: OTPFormProps) {
         resolver: arktypeResolver(OTPSchema),
         defaultValues: {
             code: "",
-            email: email,
+            email,
         },
     });
     const [isPending, startTransition] = useTransition();
 
     function onSubmit(payload: typeof OTPSchema.infer) {
         startTransition(async () => {
-            const { error } = await confirmOtp(payload);
-            if (error) {
+            const { error, userId } = await verifyPasswordResetOtp(payload);
+            if (error || !userId) {
                 form.setError("code", { message: error });
                 return;
             }
-            onOtpConfirmed();
+            onOtpConfirmed(userId);
         });
     }
 
@@ -211,24 +218,24 @@ function OTPForm({ onOtpConfirmed, email }: OTPFormProps) {
     );
 }
 
-interface RegisterFormProps {
-    email: string;
+interface PasswordFieldsFormProps {
+    userId: number;
 }
-function RegisterForm({ email }: RegisterFormProps) {
+function PasswordFieldsForm({ userId }: PasswordFieldsFormProps) {
     const form = useForm({
-        resolver: arktypeResolver(SignUpSchema.omit("email")),
+        resolver: arktypeResolver(ResetPasswordSchema),
         defaultValues: {
             password: "",
-            firstName: "",
-            email,
+            passwordConfirm: "",
+            userId,
         },
     });
     const [error, setError] = useState<string>();
     const [isPending, startTransition] = useTransition();
 
-    function onSubmit(credentials: typeof SignUpSchema.infer) {
+    function onSubmit(credentials: typeof ResetPasswordSchema.infer) {
         startTransition(async () => {
-            const { error } = await register(credentials);
+            const { error } = await resetPassword(credentials);
             if (error) setError(error);
         });
     }
@@ -241,25 +248,6 @@ function RegisterForm({ email }: RegisterFormProps) {
                         {error}
                     </p>
                 )}
-                <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                        <FormItem className="relative flex h-[40px] flex-col justify-center items-center">
-                            <FloatingLabelInput
-                                {...field}
-                                id="userName"
-                                label="First Name"
-                                type="text"
-                                classNames={{
-                                    input: "w-full",
-                                    wrapper: "w-[99%] mx-auto",
-                                }}
-                            />
-                            <FormMessage className="absolute -bottom-5" />
-                        </FormItem>
-                    )}
-                />
                 <FormField
                     control={form.control}
                     name="password"
@@ -279,13 +267,32 @@ function RegisterForm({ email }: RegisterFormProps) {
                         </FormItem>
                     )}
                 />
+                <FormField
+                    control={form.control}
+                    name="passwordConfirm"
+                    render={({ field }) => (
+                        <FormItem className="relative flex h-[40px] flex-col justify-center items-center">
+                            <FloatingLabelInput
+                                {...field}
+                                id="passwordConfirm"
+                                label="Confirm Password"
+                                type="password"
+                                classNames={{
+                                    input: "w-full",
+                                    wrapper: "w-[99%] mx-auto",
+                                }}
+                            />
+                            <FormMessage className="absolute -bottom-5" />
+                        </FormItem>
+                    )}
+                />
                 <SubmitButton
                     variant="outline"
                     className="w-full"
                     buttonState={isPending ? "loading" : "idle"}
                     buttonStateMapping={{
-                        idle: "Sign Up",
-                        success: "Sign up success!",
+                        idle: "Confirm",
+                        success: "Password Reset!",
                     }}
                 />
             </form>
