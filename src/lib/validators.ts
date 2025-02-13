@@ -1,20 +1,26 @@
 import { type } from "arktype";
 
+const email$ = type("string.email").configure({
+    message: (ctx) => `Email must be a valid email (was ${ctx.actual})`,
+});
+const password$ = type("string>4").configure({
+    actual: () => "",
+    message: (ctx) => `Password must be ${ctx.expected}`,
+});
+
 export const SignInSchema = type({
-    email: "string.email",
-    password: "string>4",
+    email: email$,
+    password: password$,
 });
 
 export const OTPSchema = type({
     code: "5<string.numeric<7",
-    email: "string.email",
+    email: email$,
 });
 
 export const SignUpSchema = type({
     email: "string.email",
-    password: type("string>4").configure({
-        actual: () => "",
-    }),
+    password: password$,
     firstName: type("string>1 & string.alpha").configure({
         message: () => "Only alphabetic characters allowed",
     }),
@@ -22,12 +28,8 @@ export const SignUpSchema = type({
 
 export const ResetPasswordSchema = type({
     userId: "number",
-    password: type("string>4").configure({
-        actual: () => "",
-    }),
-    passwordConfirm: type("string>4").configure({
-        actual: () => "",
-    }),
+    password: password$,
+    passwordConfirm: password$,
 }).narrow((data, ctx) => {
     if (data.password === data.passwordConfirm) {
         return true;

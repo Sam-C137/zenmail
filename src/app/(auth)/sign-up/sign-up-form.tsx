@@ -130,7 +130,7 @@ function EmailForm({ onEmailSent }: EmailFormProps) {
                                     wrapper: "w-[99%] mx-auto",
                                 }}
                             />
-                            <FormMessage className="absolute -bottom-5" />
+                            <FormMessage className="absolute line-clamp-1 truncate -bottom-5" />
                         </FormItem>
                     )}
                 />

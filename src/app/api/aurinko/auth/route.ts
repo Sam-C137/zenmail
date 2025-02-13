@@ -5,10 +5,14 @@ export async function GET(req: NextRequest) {
     const queryString = req.nextUrl.search;
     const originalUrl = `${aurinkoUrl}${queryString}`;
 
+    const type = req.nextUrl.searchParams.get("type");
+    console.log("type of req is", type);
+
     const aurinkoRequest = new Request(originalUrl, {
         method: req.method,
         headers: req.headers,
         body: req.body,
+        credentials: "include",
     });
 
     const aurinkoResponse = await fetch(aurinkoRequest);

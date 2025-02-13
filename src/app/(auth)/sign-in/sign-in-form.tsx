@@ -97,7 +97,7 @@ export function SignInForm() {
                                             label="Email"
                                             type="email"
                                         />
-                                        <FormMessage className="absolute -bottom-5" />
+                                        <FormMessage className="absolute line-clamp-1 truncate -bottom-5" />
                                     </FormItem>
                                 )}
                             />

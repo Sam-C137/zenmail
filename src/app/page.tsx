@@ -1,8 +1,10 @@
+"use client";
+
 import { logout } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
-import { getAurinkoAuthUrl } from "@/server/aurinko";
+import { getAurinkoAuthUrl } from "@/server/aurinko.actions";
 
-export default async function Home() {
+export default function Home() {
     return (
         <main>
             Hello foo

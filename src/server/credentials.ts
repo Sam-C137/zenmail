@@ -1,4 +1,5 @@
-import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
+import "server-only";
+
 import { db } from "@/server/db";
 import { compare, hash } from "bcrypt";
 import { resend } from "@/server/resend";
@@ -66,7 +67,7 @@ export async function verifyPasswordResetToken(
         },
     });
 
-    if (!resetToken || !(await compare(token, resetToken.otp as string))) {
+    if (!resetToken || !(await compare(token, resetToken.otp))) {
         return {
             success: false,
             error: "Password reset token is invalid, please request a new one",
