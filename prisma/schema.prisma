@@ -31,8 +31,9 @@ model User {
   githubId     Int?    @unique
   microsoftId  String? @unique
 
-  session             Session[]
+  sessions            Session[]
   passwordResetTokens PasswordResetToken[]
+  accounts            Account[]
 
   @@map("users")
 }
@@ -57,4 +58,17 @@ model EmailVerificationToken {
 
   @@unique([email])
   @@map("email_verification_tokens")
+}
+
+model Account {
+  id           String @id @default(uuid())
+  userId       Int
+  accessToken  String @unique
+  emailAddress String @unique
+  name         String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([emailAddress])
+  @@map("accounts")
 }

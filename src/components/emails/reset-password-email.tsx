@@ -76,7 +76,7 @@ export function ResetPasswordEmail({ code }: ResetPasswordEmailProps) {
                                         <Column>
                                             <Link href="/https://github.com/Sam-C137">
                                                 <Img
-                                                    src={`${baseUrl}/static/github-icon.png`}
+                                                    src={`${baseUrl}/static/github-icon.svg`}
                                                     width="32"
                                                     height="32"
                                                     alt="Sam-C137"
