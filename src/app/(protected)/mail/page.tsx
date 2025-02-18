@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import { InitialSync } from "./initial-sync";
 import React from "react";
-import { MailContent } from "@/app/(protected)/mail/mail-content";
+import { InitialSync } from "./@components/initial-sync";
+import { MailContent } from "./@components/mail-content";
 import { InitialSyncErrorBoundary } from "./error";
 import MailLoadingPage from "./loading";
 

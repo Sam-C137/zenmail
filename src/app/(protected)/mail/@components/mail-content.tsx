@@ -10,6 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AccountSwitcher } from "@/app/(protected)/mail/@components/account-switcher";
 
 interface MailContentProps {
     defaultLayout?: [number, number, number];
@@ -56,7 +57,7 @@ export function MailContent({
                                 isCollapsed ? "h-[52px]" : "px-2",
                             )}
                         >
-                            Account switcher
+                            <AccountSwitcher isCollapsed={isCollapsed} />
                         </div>
                         <Separator />
                         Sidebar
