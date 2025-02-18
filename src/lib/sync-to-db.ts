@@ -15,6 +15,7 @@ type Attachment = typeof EmailAttachment.infer;
 export async function syncEmailsToDatabase(emails: Email[], accountId: string) {
     const limit = pLimit(10);
     let allSuccessful = true;
+    const processedThreadIds = new Set<string>();
 
     try {
         await Promise.all(
@@ -23,10 +24,23 @@ export async function syncEmailsToDatabase(emails: Email[], accountId: string) {
                     const result = await upsertEmail(email, accountId);
                     if (result === null) {
                         allSuccessful = false;
+                    } else {
+                        processedThreadIds.add(email.threadId);
                     }
                 }),
             ),
         );
+
+        if (processedThreadIds.size > 0) {
+            await Promise.all(
+                Array.from(processedThreadIds).map((threadId) =>
+                    limit(async () => {
+                        await updateThreadDeletionStatus(threadId);
+                    }),
+                ),
+            );
+        }
+
         if (allSuccessful) {
             await db.account.update({
                 where: {
@@ -55,8 +69,11 @@ async function upsertEmail(email: Email, accountId: string) {
             label = "sent";
         } else if (email.sysLabels.includes("draft")) {
             label = "draft";
+        } else if (email.sysLabels.includes("trash")) {
+            label = "trash";
         }
         const addresses = new Map<string, Address>();
+        const isDeleted = email.sysLabels.includes("trash");
 
         for (const address of [
             email.from,
@@ -122,6 +139,7 @@ async function upsertEmail(email: Email, accountId: string) {
                 inboxStatus: label === "inbox",
                 sentStatus: label === "sent",
                 done: false,
+                isDeleted: false,
                 participantIds: [
                     from.id,
                     ...to.map((a) => a!.id),
@@ -162,6 +180,8 @@ async function upsertEmail(email: Email, accountId: string) {
                 folderId: email.folderId,
                 omitted: email.omitted,
                 emailLabel: label,
+                deletedAt: isDeleted ? new Date() : null,
+                isDeleted,
             },
             create: {
                 threadId: thread.id,
@@ -192,6 +212,8 @@ async function upsertEmail(email: Email, accountId: string) {
                 folderId: email.folderId,
                 omitted: email.omitted,
                 emailLabel: label,
+                deletedAt: isDeleted ? new Date() : null,
+                isDeleted,
             },
         });
 
@@ -200,11 +222,17 @@ async function upsertEmail(email: Email, accountId: string) {
             orderBy: { receivedAt: "asc" },
         });
         let threadFolderType: EmailLabel = "sent";
+        const activeEmails = threadEmails.filter(
+            (e) => !e.isDeleted && e.emailLabel !== "trash",
+        );
         for (const threadEmail of threadEmails) {
-            if (threadEmail.emailLabel === "inbox") {
+            if (threadEmail.emailLabel === "inbox" && !threadEmail.isDeleted) {
                 threadFolderType = "inbox";
                 break;
-            } else if (threadEmail.emailLabel === "draft") {
+            } else if (
+                threadEmail.emailLabel === "draft" &&
+                !threadEmail.isDeleted
+            ) {
                 threadFolderType = "draft";
             }
         }
@@ -215,6 +243,8 @@ async function upsertEmail(email: Email, accountId: string) {
                 draftStatus: threadFolderType === "draft",
                 inboxStatus: threadFolderType === "inbox",
                 sentStatus: threadFolderType === "sent",
+                isDeleted: activeEmails.length === 0,
+                deletedAt: activeEmails.length === 0 ? new Date() : null,
             },
         });
 
@@ -224,6 +254,31 @@ async function upsertEmail(email: Email, accountId: string) {
     } catch (e) {
         console.error("Error upserting email", e);
         return null;
+    }
+}
+
+async function updateThreadDeletionStatus(threadId: string) {
+    try {
+        const activeEmailsCount = await db.email.count({
+            where: {
+                threadId,
+                isDeleted: false,
+                emailLabel: { not: "trash" },
+            },
+        });
+
+        await db.thread.update({
+            where: { id: threadId },
+            data: {
+                isDeleted: activeEmailsCount === 0,
+                deletedAt: activeEmailsCount === 0 ? new Date() : null,
+            },
+        });
+    } catch (e) {
+        console.error(
+            `Error updating thread deletion status for ${threadId}`,
+            e,
+        );
     }
 }
 

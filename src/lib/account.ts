@@ -59,7 +59,7 @@ export class Account {
      * @private
      */
     private async startSync({
-        daysWithin = 3,
+        daysWithin = 15,
         bodyType = "html",
     }: Partial<typeof this.schemas.startSync.query.infer>) {
         const response = await aurinkoApi.post(

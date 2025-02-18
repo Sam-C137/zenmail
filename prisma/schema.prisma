@@ -87,22 +87,25 @@ model Thread {
   account         Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   done            Boolean  @default(false)
 
-  inboxStatus Boolean @default(true)
-  draftStatus Boolean @default(false)
-  sentStatus  Boolean @default(false)
+  inboxStatus Boolean   @default(true)
+  draftStatus Boolean   @default(false)
+  sentStatus  Boolean   @default(false)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
 
   emails Email[]
 
   @@index([done])
   @@index([accountId, lastMessageDate])
   @@index([accountId, inboxStatus])
+  @@index([isDeleted])
   @@map("threads")
 }
 
 model Email {
   id                   String                @id @default(cuid())
   threadId             String
-  thread               Thread                @relation(fields: [threadId], references: [id])
+  thread               Thread                @relation(fields: [threadId], references: [id], onDelete: Cascade)
   createdTime          DateTime
   lastModifiedTime     DateTime
   sentAt               DateTime
@@ -133,12 +136,15 @@ model Email {
   omitted              String[]
 
   emailLabel EmailLabel @default(inbox)
+  isDeleted  Boolean    @default(false)
+  deletedAt  DateTime?
 
   @@index([threadId])
   @@index([emailLabel])
   @@index([sentAt])
   @@index([createdTime])
   @@index([fromId])
+  @@index([isDeleted])
   @@map("emails")
 }
 
@@ -185,6 +191,7 @@ enum EmailLabel {
   inbox
   sent
   draft
+  trash
 }
 
 enum Sensitivity {
