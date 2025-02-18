@@ -7,55 +7,61 @@ import {
 import { db } from "@/server/db";
 
 export async function GET(req: NextRequest) {
-    const cookies = req.headers.get("set-cookie");
-    const session = new Map(
-        cookies?.split(";")?.map((c) => c.split("=")) as [string, string][],
-    ).get("session");
-
-    if (!session) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const { user } = await validateSessionToken(session);
-
-    if (!user) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const params = req.nextUrl.searchParams;
-    const status = params.get("status");
-    if (status !== "success") {
-        return NextResponse.json(
-            { message: "Failed to link account" },
-            { status: 401 },
-        );
-    }
-
-    const code = params.get("code");
-    if (!code) {
-        return NextResponse.json(
-            { message: "Code not found" },
-            { status: 400 },
-        );
-    }
-
-    const token = await exchangeCodeForAccessToken(code);
-    if (!token) {
-        return NextResponse.json(
-            { message: "Failed to exchange code for token" },
-            { status: 500 },
-        );
-    }
-
-    const accountDetails = await getAccountDetails(token.accessToken);
-    if (!accountDetails) {
-        return NextResponse.json(
-            { message: "Failed to get account details" },
-            { status: 500 },
-        );
-    }
-
     try {
+        const cookies = req.headers.get("set-cookie");
+        const session = new Map(
+            cookies?.split(";")?.map((c) => c.split("=")) as [string, string][],
+        ).get("session");
+
+        if (!session) {
+            return NextResponse.json(
+                { message: "Unauthorized" },
+                { status: 401 },
+            );
+        }
+
+        const { user } = await validateSessionToken(session);
+
+        if (!user) {
+            return NextResponse.json(
+                { message: "Unauthorized" },
+                { status: 401 },
+            );
+        }
+
+        const params = req.nextUrl.searchParams;
+        const status = params.get("status");
+        if (status !== "success") {
+            return NextResponse.json(
+                { message: "Failed to link account" },
+                { status: 401 },
+            );
+        }
+
+        const code = params.get("code");
+        if (!code) {
+            return NextResponse.json(
+                { message: "Code not found" },
+                { status: 400 },
+            );
+        }
+
+        const token = await exchangeCodeForAccessToken(code);
+        if (!token) {
+            return NextResponse.json(
+                { message: "Failed to exchange code for token" },
+                { status: 500 },
+            );
+        }
+
+        const accountDetails = await getAccountDetails(token.accessToken);
+        if (!accountDetails) {
+            return NextResponse.json(
+                { message: "Failed to get account details" },
+                { status: 500 },
+            );
+        }
+
         const existingAccount = await db.account.findFirst({
             where: {
                 emailAddress: accountDetails.email,
@@ -93,8 +99,10 @@ export async function GET(req: NextRequest) {
                 emailAddress: accountDetails.email,
                 name: accountDetails.name,
                 accessToken: token.accessToken,
+                initialSyncStatus: "Pending",
             },
         });
+
         return html("", true);
     } catch (e) {
         console.error(e);
