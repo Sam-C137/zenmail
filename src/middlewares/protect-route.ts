@@ -1,7 +1,12 @@
 import { type MiddlewareFactory } from "@/middlewares/stack-middlewares";
 import { NextResponse } from "next/server";
 
-const publicRoutes = ["/sign-in(.*)", "/sign-up(.*)", "/"];
+const publicRoutes = [
+    "/sign-in(.*)",
+    "/sign-up(.*)",
+    "/",
+    "/api/initial-sync(.*)",
+];
 
 export const createProtectRouteMiddleware: MiddlewareFactory = (next) => {
     return async function (request, event): Promise<NextResponse> {
