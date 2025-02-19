@@ -14,7 +14,7 @@ import { hash } from "bcrypt";
 import {
     sendEmailVerification,
     verifyEmailVerificationToken,
-} from "@/server/credentials";
+} from "@/server/db-queries/auth";
 
 const emailSchema = SignUpSchema.pick("email");
 export async function verifyEmail(

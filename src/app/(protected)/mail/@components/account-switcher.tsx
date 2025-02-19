@@ -4,7 +4,7 @@ import { api } from "@/trpc/react";
 import { useLocalStorage } from "@/hooks/use-localstorage";
 import { cn } from "@/lib/utils";
 import { getAurinkoAuthUrl } from "@/server/aurinko.actions";
-import { ChevronRight, ChevronsUpDown, Plus } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,13 +21,16 @@ import { useCallback } from "react";
 import { useMeasure } from "@/hooks/use-measure";
 import { GoogleIcon } from "@/components/ui/google-icon";
 import { MicrosoftIcon } from "@/components/ui/microsoft-icon";
+import { adventurerNeutral } from "@dicebear/collection";
+import { createAvatar } from "@dicebear/core";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface AccountSwitcherProps {
     isCollapsed: boolean;
 }
 
 export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
-    const [accounts] = api.account.getAccounts.useSuspenseQuery();
+    const [accounts] = api.account.me.list.useSuspenseQuery();
     const [ref, bounds] = useMeasure();
     const [selectedAccountId, setSelectedAccountId] = useLocalStorage(
         "selectedAccountId",
@@ -63,7 +66,17 @@ export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
                             isCollapsed && "hidden",
                         )}
                     >
-                        <span>{selectedAccount?.emailAddress?.at(0)}</span>
+                        <Avatar className="size-7 rounded-lg">
+                            <AvatarImage
+                                src={createAvatar(adventurerNeutral, {
+                                    size: 24,
+                                    seed: selectedAccount?.emailAddress,
+                                }).toDataUri()}
+                            />
+                            <AvatarFallback>
+                                {selectedAccount?.emailAddress?.at(0)}
+                            </AvatarFallback>
+                        </Avatar>
                         <span className="ml-2">
                             {selectedAccount?.emailAddress}
                         </span>
@@ -83,6 +96,17 @@ export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
                         className="w-full"
                     >
                         <div className="flex items-center gap-3 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0 [&_svg]:text-foreground">
+                            <Avatar className="size-7 rounded-lg">
+                                <AvatarImage
+                                    src={createAvatar(adventurerNeutral, {
+                                        size: 24,
+                                        seed: account.emailAddress,
+                                    }).toDataUri()}
+                                />
+                                <AvatarFallback>
+                                    {account.emailAddress?.at(0)}
+                                </AvatarFallback>
+                            </Avatar>
                             {account.emailAddress}
                         </div>
                     </DropdownMenuItem>
@@ -96,18 +120,18 @@ export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
                                     window.location.href =
                                         await getAurinkoAuthUrl("Google");
                                 }}
-                                className="w-full flex gap-8"
+                                className="w-full py-1 flex gap-8"
                             >
                                 Google
                                 <GoogleIcon className="ml-auto h-4 w-4 shrink-0" />
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator className="my-0" />
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem
                                 onClick={async () => {
                                     window.location.href =
                                         await getAurinkoAuthUrl("Office365");
                                 }}
-                                className="w-full flex gap-8"
+                                className="w-full py-1 flex gap-8"
                             >
                                 Microsoft
                                 <MicrosoftIcon className="ml-auto h-4 w-4 shrink-0" />

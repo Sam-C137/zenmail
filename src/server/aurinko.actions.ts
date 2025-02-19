@@ -4,7 +4,6 @@ import { env } from "@/env";
 import { type } from "arktype";
 import { validateRequest } from "@/server/session";
 import { aurinkoApi } from "@/lib/aurinko";
-import { redirect } from "next/navigation";
 
 const ServiceTypes = type("'Google' | 'Office365' | 'Slack' | 'iCloud'");
 
