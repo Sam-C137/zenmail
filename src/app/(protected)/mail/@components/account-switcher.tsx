@@ -29,11 +29,13 @@ interface AccountSwitcherProps {
     isCollapsed: boolean;
 }
 
+export const SELECTED_ACCOUNT_ID = "selectedAccountId";
+
 export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
     const [accounts] = api.account.me.list.useSuspenseQuery();
     const [ref, bounds] = useMeasure();
     const [selectedAccountId, setSelectedAccountId] = useLocalStorage(
-        "selectedAccountId",
+        SELECTED_ACCOUNT_ID,
         "",
     );
     const selectedAccount = accounts.find(
@@ -60,34 +62,47 @@ export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
                     )}
                     ref={ref}
                 >
-                    <span
-                        className={cn(
-                            "flex items-center gap-2 truncate",
-                            isCollapsed && "hidden",
-                        )}
-                    >
-                        <Avatar className="size-7 rounded-lg">
-                            <AvatarImage
-                                src={createAvatar(adventurerNeutral, {
-                                    size: 24,
-                                    seed: selectedAccount?.emailAddress,
-                                }).toDataUri()}
-                            />
-                            <AvatarFallback>
-                                {selectedAccount?.emailAddress?.at(0)}
-                            </AvatarFallback>
-                        </Avatar>
-                        <span className="ml-2">
-                            {selectedAccount?.emailAddress}
+                    {isCollapsed ? (
+                        <span className=" w-full h-full flex items-center justify-center">
+                            <Avatar className="size-7 rounded-lg">
+                                <AvatarImage
+                                    src={createAvatar(adventurerNeutral, {
+                                        size: 24,
+                                        seed: selectedAccount?.emailAddress,
+                                    }).toDataUri()}
+                                />
+                                <AvatarFallback>
+                                    {selectedAccount?.emailAddress?.at(0)}
+                                </AvatarFallback>
+                            </Avatar>
                         </span>
-                    </span>
-                    <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                    ) : (
+                        <>
+                            <span className="flex items-center gap-2 truncate">
+                                <Avatar className="size-7 rounded-lg">
+                                    <AvatarImage
+                                        src={createAvatar(adventurerNeutral, {
+                                            size: 24,
+                                            seed: selectedAccount?.emailAddress,
+                                        }).toDataUri()}
+                                    />
+                                    <AvatarFallback>
+                                        {selectedAccount?.emailAddress?.at(0)}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <span className="ml-2">
+                                    {selectedAccount?.emailAddress}
+                                </span>
+                            </span>
+                            <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                        </>
+                    )}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
                 align="end"
                 className="w-full"
-                style={{ width: bounds?.width }}
+                style={{ ...(!isCollapsed && { width: bounds?.width }) }}
             >
                 {accounts.map((account) => (
                     <DropdownMenuItem
@@ -95,7 +110,7 @@ export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
                         onSelect={() => setSelectedAccountId(account.id)}
                         className="w-full"
                     >
-                        <div className="flex items-center gap-3 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0 [&_svg]:text-foreground">
+                        <div className="flex items-center gap-3">
                             <Avatar className="size-7 rounded-lg">
                                 <AvatarImage
                                     src={createAvatar(adventurerNeutral, {

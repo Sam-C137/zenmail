@@ -41,7 +41,11 @@ export class InitialSyncErrorBoundary extends Component<
 
     render() {
         if (this.state.hasError) {
-            return <>Failed to trigger initial sync</>;
+            return (
+                <main className="grid h-screen place-items-center font-semibold">
+                    Failed to load your mail. Please try again.
+                </main>
+            );
         }
 
         return <>{this.props.children}</>;
