@@ -1,18 +1,16 @@
-import { validateRequest } from "@/server/session";
 import { db } from "@/server/db";
-import { Account } from "@/lib/account";
-import { syncEmailsToDatabase } from "@/lib/sync-to-db";
+import { Account } from "@/server/db-queries/email/account";
+import { syncEmailsToDatabase } from "@/server/db-queries/email/sync-to-db";
+import { type Account as Account$ } from "@prisma/client";
 
-export async function InitialSync({ children }: React.PropsWithChildren) {
-    const { user } = await validateRequest();
-    if (!user) return null;
+interface InitialSyncProps {
+    userAccount: Account$ | null;
+}
 
-    const userAccount = await db.account.findFirst({
-        where: {
-            userId: user.id,
-        },
-    });
-
+export async function InitialSync({
+    children,
+    userAccount,
+}: React.PropsWithChildren & InitialSyncProps) {
     if (userAccount?.initialSyncStatus === "Pending") {
         try {
             const account = new Account(userAccount.accessToken);

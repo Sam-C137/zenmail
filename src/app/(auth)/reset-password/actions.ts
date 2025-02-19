@@ -6,7 +6,7 @@ import {
     isSamePassword,
     sendPasswordResetCode,
     verifyPasswordResetToken,
-} from "@/server/credentials";
+} from "@/server/db-queries/auth";
 import { OTPSchema, ResetPasswordSchema } from "@/lib/validators";
 import { hash } from "bcrypt";
 import {
