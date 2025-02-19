@@ -2,6 +2,7 @@ import { db } from "@/server/db";
 import { Account } from "@/server/db-queries/email/account";
 import { syncEmailsToDatabase } from "@/server/db-queries/email/sync-to-db";
 import { type Account as Account$ } from "@prisma/client";
+import React from "react";
 
 interface InitialSyncProps {
     userAccount: Account$ | null;
@@ -37,6 +38,11 @@ export async function InitialSync({
             }
         } catch (e) {
             console.error("Failed to trigger initial sync", e);
+            return (
+                <main className="grid h-screen place-items-center font-semibold">
+                    Failed to sync your account. Please try again.
+                </main>
+            );
         }
     }
 

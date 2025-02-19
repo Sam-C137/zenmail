@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AccountSwitcher } from "@/app/(protected)/mail/@components/account-switcher";
+import { Sidebar } from "@/app/(protected)/mail/@components/sidebar";
 
 interface MailContentProps {
     defaultLayout?: [number, number, number];
@@ -60,8 +61,7 @@ export function MailContent({
                             <AccountSwitcher isCollapsed={isCollapsed} />
                         </div>
                         <Separator />
-                        Sidebar
-                        <div className="flex-1"></div>
+                        <Sidebar isCollapsed={isCollapsed} />
                         Ask AI
                     </div>
                 </ResizablePanel>

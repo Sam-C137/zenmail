@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import React from "react";
+import { type Metadata } from "next";
 import { InitialSync } from "./@components/initial-sync";
 import { MailContent } from "./@components/mail-content";
 import { InitialSyncErrorBoundary } from "./error";
@@ -7,6 +8,20 @@ import MailLoadingPage from "./loading";
 import { validateRequest } from "@/server/session";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
+
+interface MailPageProps {
+    searchParams: {
+        tab?: string;
+    };
+}
+
+export function generateMetadata({
+    searchParams: { tab },
+}: MailPageProps): Metadata {
+    return {
+        title: tab ? tab.at(0)?.toUpperCase() + tab.slice(1) : "Inbox",
+    };
+}
 
 export default async function MailPage() {
     const { user } = await validateRequest();
