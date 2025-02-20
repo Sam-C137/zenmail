@@ -76,12 +76,7 @@ export class Account {
             },
         );
 
-        const data = this.schemas.startSync.response(response.data);
-        if (data instanceof type.errors) {
-            throw new Error(data.message);
-        }
-
-        return data;
+        return this.schemas.startSync.response.assert(response.data);
     }
 
     /**
@@ -102,12 +97,7 @@ export class Account {
             },
         });
 
-        const data = this.schemas.getUpdatedEmails.response(response.data);
-        if (data instanceof type.errors) {
-            throw new Error(data.message);
-        }
-
-        return data;
+        return this.schemas.getUpdatedEmails.response.assert(response.data);
     }
 
     private schemas = {

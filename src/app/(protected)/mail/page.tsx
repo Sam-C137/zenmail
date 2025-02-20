@@ -10,14 +10,15 @@ import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 
 interface MailPageProps {
-    searchParams: {
+    searchParams: Promise<{
         tab?: string;
-    };
+    }>;
 }
 
-export function generateMetadata({
-    searchParams: { tab },
-}: MailPageProps): Metadata {
+export async function generateMetadata({
+    searchParams,
+}: MailPageProps): Promise<Metadata> {
+    const { tab } = await searchParams;
     return {
         title: tab ? tab.at(0)?.toUpperCase() + tab.slice(1) : "Inbox",
     };

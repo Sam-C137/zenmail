@@ -13,11 +13,7 @@ export async function getAurinkoAuthUrl(
     const { user } = await validateRequest();
     if (!user) throw new Error("Unauthorized");
 
-    const s = ServiceTypes(serviceType);
-
-    if (s instanceof type.errors) {
-        throw new Error(s.message);
-    }
+    ServiceTypes.assert(serviceType);
 
     const params = new URLSearchParams({
         clientId: env.AURINKO_CLIENT_ID,
@@ -48,11 +44,7 @@ export async function exchangeCodeForAccessToken(code: string) {
                 },
             },
         );
-        const data = codeExchangeSchema(response.data);
-        if (data instanceof type.errors) {
-            throw new Error(data.message);
-        }
-        return data;
+        return codeExchangeSchema.assert(response.data);
     } catch (e) {
         console.error(e);
         return null;
@@ -75,11 +67,7 @@ export async function getAccountDetails(accessToken: string) {
                 Authorization: `Bearer ${accessToken}`,
             },
         });
-        const data = accountDetailsSchema(response.data);
-        if (data instanceof type.errors) {
-            throw new Error(data.message);
-        }
-        return data;
+        return accountDetailsSchema.assert(response.data);
     } catch (e) {
         console.error(e);
         return null;
