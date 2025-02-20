@@ -14,7 +14,7 @@ export default function MailErrorPage({ error, reset }: MailErrorPageProps) {
     }, [error]);
 
     return (
-        <main className="grid place-items-center">
+        <main className="grid h-screen place-items-center">
             <h1>Something went wrong.</h1>
             <Button onClick={() => reset()}>Try again</Button>
         </main>

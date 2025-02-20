@@ -1,25 +1,16 @@
 "use client";
 
 import { FileIcon, InboxIcon, SendIcon, Trash2Icon } from "lucide-react";
-import { type EmailLabel } from "@prisma/client";
 import { NavItem } from "@/app/(protected)/mail/@components/nav-item";
 import { useQueryState } from "nuqs";
-import { type } from "arktype";
 
 interface SidebarProps {
     isCollapsed: boolean;
 }
 
 export function Sidebar({ isCollapsed }: SidebarProps) {
-    const [tab] = useQueryState<EmailLabel>("tab", {
+    const [tab] = useQueryState("tab", {
         defaultValue: "inbox",
-        parse: (value) => {
-            const parsed = type("'trash' | 'sent' | 'inbox' | 'draft'")(value);
-            if (parsed instanceof type.errors) {
-                return "inbox";
-            }
-            return parsed;
-        },
     });
 
     return (

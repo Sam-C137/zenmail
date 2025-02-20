@@ -1,5 +1,35 @@
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
 import { type } from "arktype";
+import { t } from "@/server/api/trpc";
+
+const protection = t.middleware(async ({ ctx, next, input }) => {
+    const values = type({ accountId: "string>1" })(input);
+    if (values instanceof type.errors) {
+        throw new Error("Account id is required");
+    }
+    const account = await ctx.db.account.findFirst({
+        where: {
+            id: values.accountId,
+            userId: ctx.user?.id,
+        },
+        select: {
+            id: true,
+            name: true,
+            emailAddress: true,
+            accessToken: true,
+        },
+    });
+    if (!account) {
+        throw new Error("Account does not exist");
+    }
+    return next({
+        ctx: {
+            ...ctx,
+            account,
+        },
+        input,
+    });
+});
 
 export const threadRouter = createTRPCRouter({
     count: privateProcedure
@@ -9,28 +39,14 @@ export const threadRouter = createTRPCRouter({
                 type: "'trash' | 'sent' | 'inbox' | 'draft'",
             }),
         )
+        .use(protection)
         .query(async ({ ctx, input }) => {
-            const account = await ctx.db.account.findFirst({
-                where: {
-                    id: input.accountId,
-                    userId: ctx.user.id,
-                },
-                select: {
-                    id: true,
-                    name: true,
-                    emailAddress: true,
-                    accessToken: true,
-                },
-            });
-            if (!account) {
-                throw new Error("Account does not exist");
-            }
             return await ctx.db.thread.count({
                 where: {
                     NOT: {
                         isDeleted: input.type !== "trash",
                     },
-                    accountId: account.id,
+                    accountId: ctx.account.id,
                     ...(input.type !== "trash" && {
                         ...(input.type === "inbox" && {
                             inboxStatus: true,
