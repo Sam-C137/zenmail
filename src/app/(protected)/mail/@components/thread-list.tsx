@@ -6,8 +6,9 @@ import {
     ThreadItem,
     ThreadItemLoading,
 } from "@/app/(protected)/mail/@components/thread-item";
-import { useState } from "react";
 import { useQueryState } from "nuqs";
+import { ThreadListToolbar } from "@/app/(protected)/mail/@components/thread-list-toolbar";
+import { useThreadNavigation } from "@/hooks/use-thread-navigation";
 
 interface ThreadListProps {
     done: boolean;
@@ -24,8 +25,16 @@ export function ThreadList({ done }: ThreadListProps) {
         error,
     } = useGetThreads({ done });
     const threads = data?.pages.flatMap((page) => page.data);
-    const [checkedThreads, setCheckedThreads] = useState<string[]>([]);
     const [activeThread, setActiveThread] = useQueryState("activeThread");
+    const {
+        selectedThreads,
+        handleSelection,
+        handleDeselectAll,
+        handleSelectAll,
+        itemRefs,
+    } = useThreadNavigation(threads, () => {
+        // TODO deletion logic
+    });
 
     return (
         <InfiniteScrollContainer
@@ -43,7 +52,7 @@ export function ThreadList({ done }: ThreadListProps) {
                     Your inbox is empty 📭
                 </p>
             )}
-            {error && (
+            {error && !threads && (
                 <p className="text-center text-destructive">
                     Failed to load threads 😢
                 </p>
@@ -54,6 +63,9 @@ export function ThreadList({ done }: ThreadListProps) {
                     <ThreadItem
                         key={thread.id}
                         thread={thread}
+                        ref={(el) => {
+                            if (el) itemRefs.current.set(thread.id, el);
+                        }}
                         shouldShowDate={(() => {
                             if (i === 0) return true;
                             if (!thread.emails[0]) return false;
@@ -65,25 +77,17 @@ export function ThreadList({ done }: ThreadListProps) {
                                 ).getDate()
                             );
                         })()}
-                        isSelected={checkedThreads.includes(thread.id)}
-                        setIsSelected={(threadId) => {
-                            if (checkedThreads.includes(threadId)) {
-                                setCheckedThreads(
-                                    checkedThreads.filter(
-                                        (id) => id !== threadId,
-                                    ),
-                                );
-                            } else {
-                                setCheckedThreads([
-                                    ...checkedThreads,
-                                    threadId,
-                                ]);
-                            }
-                        }}
+                        isSelected={selectedThreads.includes(thread.id)}
+                        setIsSelected={handleSelection}
                         isActive={activeThread === thread.id}
                         setIsActive={setActiveThread}
                     />
                 ))}
+            <ThreadListToolbar
+                onSelectAll={handleSelectAll}
+                onDeselectAll={handleDeselectAll}
+                selectedThreads={selectedThreads}
+            />
             {isFetchingNextPage &&
                 [...Array<unknown>(3)].map((_, i) => (
                     <ThreadItemLoading key={i} />
