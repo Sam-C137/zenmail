@@ -5,8 +5,7 @@ import { compare, hash } from "bcrypt";
 import { resend } from "@/server/resend";
 import AccountVerificationEmail from "@/components/emails/account-verification-email";
 import ResetPasswordEmail from "@/components/emails/reset-password-email";
-
-const FIFTEEN_MINUTES = 1000 * 60 * 15;
+import { time } from "@/lib/constants";
 
 /**
  * RESET PASSWORD
@@ -33,7 +32,7 @@ export async function sendPasswordResetCode(
                 otp: hashed,
                 userId,
                 email,
-                expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+                expiresAt: new Date(Date.now() + time.Minute * 15),
             },
         });
     });
@@ -112,7 +111,7 @@ export async function sendEmailVerification(email: string): Promise<{
     error?: string;
 }> {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + time.Minute * 10);
     const hashed = await hash(otp, 10);
 
     await db.emailVerificationToken.deleteMany({

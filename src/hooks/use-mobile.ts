@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useIsomorphicLayoutEffect } from "./use-Isomorphic-layout-effect";
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -7,7 +8,7 @@ export function useIsMobile() {
         undefined,
     );
 
-    React.useEffect(() => {
+    useIsomorphicLayoutEffect(() => {
         const mql = window.matchMedia(
             `(max-width: ${MOBILE_BREAKPOINT - 1}px)`,
         );

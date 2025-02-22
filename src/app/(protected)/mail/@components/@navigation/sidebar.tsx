@@ -1,7 +1,7 @@
 "use client";
 
 import { FileIcon, InboxIcon, SendIcon, Trash2Icon } from "lucide-react";
-import { NavItem } from "@/app/(protected)/mail/@components/nav-item";
+import { NavItem } from "@/app/(protected)/mail/@components/@navigation/nav-item";
 import { useQueryState } from "nuqs";
 
 interface SidebarProps {
