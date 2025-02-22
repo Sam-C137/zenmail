@@ -7,6 +7,7 @@ import DOMPurify from "dompurify";
 import { useMemo } from "react";
 import { Trash2Icon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { motion, Variants } from "framer-motion";
 import * as React from "react";
 
 interface ThreadItemProps {
@@ -17,6 +18,7 @@ interface ThreadItemProps {
     isSelected?: boolean;
     setIsSelected?: (threadId: string) => void;
     onDelete?: (id: string) => void;
+    isDeleting?: boolean;
 }
 
 export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
@@ -29,6 +31,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
             setIsActive,
             setIsSelected,
             onDelete,
+            isDeleting,
         },
         ref,
     ) => {
@@ -75,7 +78,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                         )}
                     </p>
                 )}
-                <div
+                <motion.div
                     ref={ref}
                     role="button"
                     tabIndex={0}
@@ -86,6 +89,18 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                         isSelected && "bg-muted",
                     )}
                     onClick={() => setIsActive?.(thread.id)}
+                    layoutId={isDeleting ? `thread-${thread.id}` : undefined}
+                    layout={!!isDeleting}
+                    transition={{
+                        layout: {
+                            duration: 0.085,
+                            type: "spring",
+                            bounce: 1,
+                        },
+                        opacity: {
+                            duration: 0.15,
+                        },
+                    }}
                 >
                     {overLay}
                     <div className="flex w-full flex-col gap-1">
@@ -143,12 +158,27 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                             </Badge>
                         ))}
                     </div>
-                </div>
+                </motion.div>
             </>
         );
     },
 );
 ThreadItem.displayName = "ThreadItem";
+
+const getThreadItemVariants = (isDeleting: boolean): Variants => ({
+    initial: isDeleting
+        ? {}
+        : {
+              opacity: 0,
+              x: -20,
+              scale: 0.95,
+          },
+    animate: {
+        opacity: 1,
+        x: 0,
+        scale: 1,
+    },
+});
 
 function getBadgeVariantFromLabel(
     label: string,

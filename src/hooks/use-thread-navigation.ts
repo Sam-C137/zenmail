@@ -55,7 +55,6 @@ export function useThreadNavigation(
             setDirection(null);
         } else if (event.key === "Delete" && selectedThreads.length > 0) {
             onDelete?.(selectedThreads);
-            setSelectedThreads([]);
             setDirection(null);
         } else if (event.shiftKey && event.key === "ArrowDown") {
             event.preventDefault();

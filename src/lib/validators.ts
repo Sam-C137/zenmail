@@ -3,7 +3,7 @@ import { type } from "arktype";
 const email$ = type("string.email").configure({
     message: (ctx) => `Email must be a valid email (was ${ctx.actual})`,
 });
-const password$ = type("string>4").configure({
+const password$ = type("string>6").configure({
     actual: () => "",
     message: (ctx) => `Password must be ${ctx.expected}`,
 });
