@@ -13,6 +13,7 @@ import { useState } from "react";
 import { ThreadDeleteOverlay } from "@/app/(protected)/mail/@components/@thread/thread-delete-overlay";
 import { MotionConfig } from "framer-motion";
 import { AnimatePresence } from "motion/react";
+import { useLocalStorage } from "@/hooks/use-localstorage";
 
 interface ThreadListProps {
     done: boolean;
@@ -31,6 +32,8 @@ export function ThreadList({ done }: ThreadListProps) {
     const threads = data?.pages.flatMap((page) => page.data);
     const [activeThread, setActiveThread] = useQueryState("activeThread");
     const [readyToRemove, setReadyToRemove] = useState(false);
+    const [confirmDelete] = useLocalStorage("confirm-delete", "true");
+    const [tab] = useQueryState("tab", { defaultValue: "inbox" });
     const {
         selectedThreads,
         handleSelection,
@@ -38,7 +41,9 @@ export function ThreadList({ done }: ThreadListProps) {
         handleSelectAll,
         itemRefs,
     } = useThreadNavigation(threads, () => {
-        setReadyToRemove(true);
+        if (confirmDelete === "true") {
+            setReadyToRemove(true);
+        }
         // TODO deletion logic
     });
 
@@ -57,12 +62,15 @@ export function ThreadList({ done }: ThreadListProps) {
                         <ThreadItemLoading key={i} />
                     ))}
                 {threads && threads.length < 1 && !hasNextPage && (
-                    <p className="text-center h-screen text-muted-foreground">
-                        Your inbox is empty 📭
+                    <p className="text-center pt-[300px] h-screen text-muted-foreground">
+                        <span className="block font-semibold">
+                            Nothing in {tab} 📭
+                        </span>
+                        Looks empty over here
                     </p>
                 )}
                 {error && !threads && (
-                    <p className="text-center text-destructive">
+                    <p className="text-center pt-[300px] h-screen text-destructive">
                         Failed to load threads 😢
                     </p>
                 )}
@@ -99,7 +107,11 @@ export function ThreadList({ done }: ThreadListProps) {
                     onSelectAll={handleSelectAll}
                     onDeselectAll={handleDeselectAll}
                     selectedThreads={selectedThreads}
-                    onDelete={() => setReadyToRemove(true)}
+                    onDelete={() => {
+                        if (confirmDelete === "true") {
+                            setReadyToRemove(true);
+                        }
+                    }}
                 />
                 <ThreadDeleteOverlay
                     threads={threads}

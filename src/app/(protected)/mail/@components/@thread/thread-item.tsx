@@ -5,10 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import DOMPurify from "dompurify";
 import { useMemo } from "react";
-import { Trash2Icon } from "lucide-react";
+import { Mail, MailOpen, Trash2Icon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { motion, Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import * as React from "react";
+import { Button } from "@/components/ui/button";
 
 interface ThreadItemProps {
     thread: RouterOutputs["thread"]["getThreads"]["data"][number];
@@ -18,6 +19,8 @@ interface ThreadItemProps {
     isSelected?: boolean;
     setIsSelected?: (threadId: string) => void;
     onDelete?: (id: string) => void;
+    onMarkAsRead?: (id: string) => void;
+    onMarkAsUnread?: (id: string) => void;
     isDeleting?: boolean;
 }
 
@@ -32,12 +35,29 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
             setIsSelected,
             onDelete,
             isDeleting,
+            onMarkAsRead,
+            onMarkAsUnread,
         },
         ref,
     ) => {
         const labels = Array.from(
             new Set(thread.emails.flatMap((email) => email.sysLabels)),
         );
+
+        const dates = useMemo(() => {
+            return {
+                category: format(
+                    new Date(thread.emails.at(0)?.sentAt ?? new Date()),
+                    "yyyy-MM-dd",
+                ),
+                sentAt: formatDistanceToNow(
+                    new Date(thread.emails.at(-1)?.sentAt ?? new Date()),
+                    {
+                        addSuffix: true,
+                    },
+                ),
+            };
+        }, [thread.emails]);
 
         const overLay = useMemo(
             () => (
@@ -55,14 +75,40 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                             onClick={(e) => e.stopPropagation()}
                         />
                     </div>
-                    <div
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete?.(thread.id);
-                        }}
-                        className="w-10 h-full group-data-[checked=true]:opacity-0 flex flex-col items-center justify-center hover:text-destructive transition-all"
-                    >
-                        <Trash2Icon className="w-4 h-4" />
+                    <div className="flex flex-col items-center justify-center h-1/2">
+                        <Button
+                            variant="ghost"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMarkAsRead?.(thread.id);
+                            }}
+                            title="Mark as read"
+                            className="group-data-[checked=true]:opacity-0"
+                        >
+                            <MailOpen className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMarkAsUnread?.(thread.id);
+                            }}
+                            title="Mark as unread"
+                            className="group-data-[checked=true]:opacity-0"
+                        >
+                            <Mail className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete?.(thread.id);
+                            }}
+                            title="Delete"
+                            className="group-data-[checked=true]:opacity-0  hover:text-destructive transition-all"
+                        >
+                            <Trash2Icon className="w-4 h-4" />
+                        </Button>
                     </div>
                 </div>
             ),
@@ -72,10 +118,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
             <>
                 {shouldShowDate && (
                     <p className="text-xs text-muted-foreground">
-                        {format(
-                            new Date(thread.emails.at(0)?.sentAt ?? new Date()),
-                            "yyyy-MM-dd",
-                        )}
+                        {dates.category}
                     </p>
                 )}
                 <motion.div
@@ -122,15 +165,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                                         : "text-muted-foreground",
                                 )}
                             >
-                                {formatDistanceToNow(
-                                    new Date(
-                                        thread.emails.at(-1)?.sentAt ??
-                                            new Date(),
-                                    ),
-                                    {
-                                        addSuffix: true,
-                                    },
-                                )}
+                                {dates.sentAt}
                             </div>
                         </div>
                         <p className="text-xs font-medium">
@@ -164,21 +199,6 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
     },
 );
 ThreadItem.displayName = "ThreadItem";
-
-const getThreadItemVariants = (isDeleting: boolean): Variants => ({
-    initial: isDeleting
-        ? {}
-        : {
-              opacity: 0,
-              x: -20,
-              scale: 0.95,
-          },
-    animate: {
-        opacity: 1,
-        x: 0,
-        scale: 1,
-    },
-});
 
 function getBadgeVariantFromLabel(
     label: string,

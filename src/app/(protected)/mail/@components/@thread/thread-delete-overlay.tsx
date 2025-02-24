@@ -7,6 +7,7 @@ import { useEventListener } from "@/hooks/use-event-listener";
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useLocalStorage } from "@/hooks/use-localstorage";
 
 interface ThreadDeleteOverlayProps {
     selectedThreads: string[];
@@ -22,6 +23,7 @@ export function ThreadDeleteOverlay({
     onClose,
 }: ThreadDeleteOverlayProps) {
     const [removed, setRemoved] = useState(false);
+    const [, setConfirmDelete] = useLocalStorage("confirm-delete", true);
     const ref = useRef(null);
     useOnClickOutside(ref, onClose);
     const threadsToRemove =
@@ -158,7 +160,11 @@ export function ThreadDeleteOverlay({
                                 </motion.div>
                             </div>
                             <div className="flex gap-4 text-sm text-muted-foreground">
-                                <Checkbox />
+                                <Checkbox
+                                    onCheckedChange={(checked) =>
+                                        setConfirmDelete(!checked)
+                                    }
+                                />
                                 Don&#39;t show this confirmation again
                             </div>
                             <motion.div
