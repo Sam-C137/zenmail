@@ -3,6 +3,7 @@
 import { FileIcon, InboxIcon, SendIcon, Trash2Icon } from "lucide-react";
 import { NavItem } from "@/app/(protected)/mail/@components/@navigation/nav-item";
 import { useQueryState } from "nuqs";
+import { ThemeToggle } from "@/app/(protected)/mail/@components/@navigation/theme-toggle";
 
 interface SidebarProps {
     isCollapsed: boolean;
@@ -45,6 +46,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                 ]}
             />
             <div className="flex-1"></div>
+            <ThemeToggle />
         </>
     );
 }
