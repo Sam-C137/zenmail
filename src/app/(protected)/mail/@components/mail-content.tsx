@@ -60,7 +60,7 @@ export function MailContent({
                             "min-w-[50px] transition-all duration-300 ease-in-out",
                     )}
                 >
-                    <div className="flex flex-col h-full flex-1">
+                    <div className="flex relative flex-col h-full flex-1">
                         <div
                             className={cn(
                                 "flex h-[52px] items-center justify-center",
