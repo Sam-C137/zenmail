@@ -1,7 +1,5 @@
 "use client";
 
-import { api } from "@/trpc/react";
-import { useLocalStorage } from "@/hooks/use-localstorage";
 import { cn } from "@/lib/utils";
 import { getAurinkoAuthUrl } from "@/server/aurinko.actions";
 import { ChevronsUpDown } from "lucide-react";
@@ -17,13 +15,13 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useCallback } from "react";
 import { useMeasure } from "@/hooks/use-measure";
 import { GoogleIcon } from "@/components/ui/google-icon";
 import { MicrosoftIcon } from "@/components/ui/microsoft-icon";
 import { adventurerNeutral } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAccount } from "@/hooks/api/use-account";
 
 interface AccountSwitcherProps {
     isCollapsed: boolean;
@@ -32,24 +30,8 @@ interface AccountSwitcherProps {
 export const SELECTED_ACCOUNT_ID = "selectedAccountId";
 
 export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
-    const [accounts] = api.account.me.list.useSuspenseQuery();
     const [ref, bounds] = useMeasure();
-    const [selectedAccountId, setSelectedAccountId] = useLocalStorage(
-        SELECTED_ACCOUNT_ID,
-        "",
-    );
-    const selectedAccount = accounts.find(
-        (account) => account.id === selectedAccountId,
-    );
-    const setInitialAccount = useCallback(() => {
-        if (accounts.length > 0 && (!selectedAccountId || !selectedAccount)) {
-            // hack to make sure this runs after the component is mounted
-            requestAnimationFrame(() => {
-                setSelectedAccountId(accounts?.at(0)?.id ?? "");
-            });
-        }
-    }, [accounts, selectedAccountId, selectedAccount, setSelectedAccountId]);
-    setInitialAccount();
+    const { selectedAccount, accounts, setSelectedAccountId } = useAccount();
 
     return (
         <DropdownMenu>

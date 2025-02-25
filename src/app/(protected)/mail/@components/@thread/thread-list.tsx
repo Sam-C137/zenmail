@@ -12,7 +12,6 @@ import { useThreadNavigation } from "@/hooks/use-thread-navigation";
 import { useState } from "react";
 import { ThreadDeleteOverlay } from "@/app/(protected)/mail/@components/@thread/thread-delete-overlay";
 import { MotionConfig } from "framer-motion";
-import { AnimatePresence } from "motion/react";
 import { useLocalStorage } from "@/hooks/use-localstorage";
 
 interface ThreadListProps {

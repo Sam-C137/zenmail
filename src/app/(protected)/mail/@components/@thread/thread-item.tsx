@@ -7,7 +7,7 @@ import DOMPurify from "dompurify";
 import { useMemo } from "react";
 import { Mail, MailOpen, Trash2Icon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { motion, type Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 
@@ -83,7 +83,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                                 onMarkAsRead?.(thread.id);
                             }}
                             title="Mark as read"
-                            className="group-data-[checked=true]:opacity-0"
+                            className="group-hover:bg-accent group-data-[checked=true]:opacity-0"
                         >
                             <MailOpen className="w-4 h-4" />
                         </Button>
@@ -94,7 +94,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                                 onMarkAsUnread?.(thread.id);
                             }}
                             title="Mark as unread"
-                            className="group-data-[checked=true]:opacity-0"
+                            className="group-hover:bg-accent group-data-[checked=true]:opacity-0"
                         >
                             <Mail className="w-4 h-4" />
                         </Button>
@@ -105,14 +105,14 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                                 onDelete?.(thread.id);
                             }}
                             title="Delete"
-                            className="group-data-[checked=true]:opacity-0  hover:text-destructive transition-all"
+                            className="group-hover:bg-accent group-data-[checked=true]:opacity-0  hover:text-destructive transition-all"
                         >
                             <Trash2Icon className="w-4 h-4" />
                         </Button>
                     </div>
                 </div>
             ),
-            [isSelected, onDelete, setIsSelected, thread.id],
+            [thread.id, isSelected],
         );
         return (
             <>
@@ -173,10 +173,14 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                         </p>
                     </div>
                     <p
-                        className="line-clamp-3 text-xs text-muted-foreground"
+                        className="line-clamp-2 !mt-2 text-xs text-muted-foreground"
                         dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(
-                                thread.emails.at(-1)?.bodySnippet ?? "",
+                                thread.emails
+                                    .at(-1)
+                                    ?.bodySnippet?.substring(0, 300)
+                                    ?.replace(/[\u200B-\u200F\uFEFF]/g, "") ??
+                                    "",
                                 {
                                     USE_PROFILES: { html: true },
                                 },

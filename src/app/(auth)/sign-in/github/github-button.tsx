@@ -1,5 +1,14 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { GithubIcon } from "@/components/ui/github-icon";
+import dynamic from "next/dynamic";
+
+const GithubIcon = dynamic(
+    () => import("@/components/ui/github-icon").then((mod) => mod.GithubIcon),
+    {
+        ssr: false,
+    },
+);
 
 export function GithubButton() {
     return (

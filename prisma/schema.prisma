@@ -91,6 +91,7 @@ model Thread {
   draftStatus Boolean   @default(false)
   sentStatus  Boolean   @default(false)
   isDeleted   Boolean   @default(false)
+  isStarred   Boolean   @default(false)
   deletedAt   DateTime?
 
   emails Email[]
@@ -99,18 +100,19 @@ model Thread {
   @@index([accountId, lastMessageDate])
   @@index([accountId, inboxStatus])
   @@index([isDeleted])
+  @@index([isStarred])
   @@map("threads")
 }
 
 model Email {
-  id                   String                @id @default(cuid())
+  id                   String                @id
   threadId             String
   thread               Thread                @relation(fields: [threadId], references: [id], onDelete: Cascade)
   createdTime          DateTime
   lastModifiedTime     DateTime
   sentAt               DateTime
   receivedAt           DateTime
-  internetMessageId    String
+  internetMessageId    String                @unique
   subject              String
   sysLabels            String[]
   keywords             String[]

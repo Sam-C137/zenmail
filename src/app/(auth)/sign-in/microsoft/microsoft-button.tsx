@@ -1,5 +1,15 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { MicrosoftIcon } from "@/components/ui/microsoft-icon";
+import dynamic from "next/dynamic";
+
+const MicrosoftIcon = dynamic(
+    () =>
+        import("@/components/ui/microsoft-icon").then(
+            (mod) => mod.MicrosoftIcon,
+        ),
+    { ssr: false },
+);
 
 export function MicrosoftButton() {
     return (
