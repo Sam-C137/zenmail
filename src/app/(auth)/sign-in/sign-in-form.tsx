@@ -19,7 +19,7 @@ export function SignInForm() {
         resolver: arktypeResolver(SignInSchema),
         defaultValues: {
             email: "",
-            password: "12345",
+            password: "1234567",
         },
         mode: "onSubmit",
     });

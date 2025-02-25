@@ -16,6 +16,7 @@ import { parseAsBoolean, useQueryState } from "nuqs";
 import { ThreadList } from "@/app/(protected)/mail/@components/@thread/thread-list";
 import { Scrollbar } from "@radix-ui/react-scroll-area";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ThreadDisplay } from "@/app/(protected)/mail/@components/@thread-display/thread-display";
 
 interface MailContentProps {
     defaultLayout?: [number, number, number];
@@ -111,7 +112,7 @@ export function MailContent({
                     minSize={30}
                     className="flex-1"
                 >
-                    Thread content
+                    <ThreadDisplay done={done} />
                 </ResizablePanel>
             </ResizablePanelGroup>
         </TooltipProvider>

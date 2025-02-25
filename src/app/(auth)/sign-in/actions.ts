@@ -77,9 +77,15 @@ export async function login(credentials: typeof SignInSchema.infer): Promise<{
             },
         });
 
-        if (!user?.passwordHash) {
+        if (!user) {
             return {
                 error: "User not found",
+            };
+        }
+
+        if (!user?.passwordHash) {
+            return {
+                error: "Please use your previous sign-in method",
             };
         }
 

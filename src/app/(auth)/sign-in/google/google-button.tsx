@@ -1,5 +1,14 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { GoogleIcon } from "@/components/ui/google-icon";
+import dynamic from "next/dynamic";
+
+const GoogleIcon = dynamic(
+    () => import("@/components/ui/google-icon").then((mod) => mod.GoogleIcon),
+    {
+        ssr: false,
+    },
+);
 
 export function GoogleButton() {
     return (
