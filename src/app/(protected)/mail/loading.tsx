@@ -53,7 +53,7 @@ export default function MailLoadingPage({
                     </div>
                 </ResizablePanel>
                 <ResizableHandle withHandle />
-                <ResizablePanel defaultSize={40} minSize={30}>
+                <ResizablePanel defaultSize={35} minSize={30}>
                     <div className="flex flex-col h-full max-h-screen">
                         <div className="flex-none">
                             <div className="flex items-center justify-between px-4 py-3">
@@ -93,7 +93,7 @@ export default function MailLoadingPage({
                     </div>
                 </ResizablePanel>
                 <ResizableHandle withHandle />
-                <ResizablePanel defaultSize={40} minSize={30}>
+                <ResizablePanel defaultSize={45} minSize={30}>
                     <div className="flex flex-col h-full p-4 space-y-4">
                         <Skeleton className="h-8 w-[50%]" />
                         <Skeleton className="h-4 w-[80%]" />

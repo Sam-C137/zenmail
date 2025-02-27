@@ -31,7 +31,7 @@ export function ThreadDisplayHeader({}: ThreadDisplayHeaderProps) {
     const today = new Date();
 
     return (
-        <div className="flex items-center p-1.5">
+        <div className="flex flex-none items-center p-1.5">
             <div className="flex items-center gap-2">
                 <Tooltip>
                     <TooltipTrigger asChild>

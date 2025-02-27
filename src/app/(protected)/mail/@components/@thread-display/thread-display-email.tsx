@@ -11,11 +11,8 @@ import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { useAccount } from "@/hooks/api/use-account";
 import { cn } from "@/lib/utils";
-import parse from "html-react-parser";
 import DOMPurify from "dompurify";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { useCallback } from "react";
-import { ElementType } from "domelementtype";
+import { useMemo } from "react";
 
 interface ThreadDisplayEmailProps {
     email: RouterOutputs["thread"]["getThreads"]["data"][number]["emails"][number];
@@ -26,25 +23,100 @@ export function ThreadDisplayEmail({ email, single }: ThreadDisplayEmailProps) {
     const { selectedAccount } = useAccount();
     const isMe = email.from.address === selectedAccount?.emailAddress;
 
-    const renderHtml = useCallback(() => {
-        return parse(
-            DOMPurify.sanitize(email.body ?? "", {
-                USE_PROFILES: { html: true },
-            }),
-            {
-                replace(node) {
-                    if (node.type === ElementType.Tag && node.name === "img") {
-                        return (
-                            <img
-                                src={`/api/proxy?url=${node.attribs.src}`}
-                                alt={node.attribs.alt}
-                            />
-                        );
-                    }
-                },
-            },
-        );
+    const { isImageEmail, isPlainTextEmail, sanitizedContent } = useMemo(() => {
+        const html = DOMPurify.sanitize(email.body ?? "", {
+            USE_PROFILES: { html: true },
+        });
+
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const imageCount = doc.querySelectorAll("img").length;
+
+        const textContent = doc.body.innerText.trim();
+        const textLength = textContent.length;
+
+        // This is primarily an image email (>5% of content are images, and there's at least one image)
+        const isImageEmail =
+            imageCount > 0 &&
+            (textLength === 0 || imageCount / textLength > 0.05);
+
+        // Common patterns of plain text emails styled as HTML
+        const hasComplexHtml =
+            doc.querySelectorAll(
+                "table:not(.plain-text-wrapper), iframe, video, canvas",
+            ).length > 0;
+
+        /**
+         * @description Common patterns in text-based emails from various providers
+         */
+        const commonTextPatterns = [
+            // Outlook/office-style text emails (with classes like elementToProof)
+            doc.querySelectorAll("div.elementToProof").length > 0,
+
+            // Simple div structure with inline styles setting color/font
+            Array.from(doc.querySelectorAll("div")).some(
+                (div) =>
+                    div.getAttribute("style")?.includes("color:") &&
+                    div.getAttribute("style")?.includes("font-family:"),
+            ),
+
+            // Sequential paragraphs with minimal styling
+            doc.querySelectorAll("p").length > 0 &&
+                doc.querySelectorAll("div").length < 5 &&
+                doc.querySelectorAll("img, table, iframe").length === 0,
+
+            // Gmail-style structured but plain emails
+            doc.querySelectorAll("div[dir='ltr']").length > 0 &&
+                doc.querySelectorAll("img").length === 0,
+
+            // Simple body with just paragraphs or line breaks
+            doc.body.children.length < 10 &&
+                Array.from(doc.body.children).every(
+                    (el) =>
+                        el.tagName === "P" ||
+                        el.tagName === "DIV" ||
+                        el.tagName === "BR",
+                ),
+        ];
+
+        const isPlainTextEmail =
+            !isImageEmail &&
+            !hasComplexHtml &&
+            commonTextPatterns.some((pattern) => pattern);
+
+        let processedContent = html;
+
+        if (isPlainTextEmail) {
+            const paragraphs = textContent
+                .split(/\n\s*\n/)
+                .filter((p) => p.trim().length > 0);
+
+            const formattedHtml = paragraphs
+                .map((p) => {
+                    const formattedParagraph = p.replace(/\n/g, "<br>").trim();
+
+                    return `<p class="email-paragraph">${formattedParagraph}</p>`;
+                })
+                .join("\n");
+
+            processedContent = `<div class="email-text-content">${formattedHtml}</div>`;
+        }
+
+        return {
+            isImageEmail,
+            isPlainTextEmail,
+            sanitizedContent: processedContent,
+        };
     }, [email.body]);
+
+    const emailStyles = `
+        .email-text-content p.email-paragraph {
+            margin-bottom: 1em;
+            line-height: 1.5;
+        }
+        .email-text-content p.email-paragraph:last-child {
+            margin-bottom: 0;
+        }
+    `;
 
     return (
         <AccordionItem value={email.id} className={single ? "h-full" : ""}>
@@ -103,28 +175,16 @@ export function ThreadDisplayEmail({ email, single }: ThreadDisplayEmailProps) {
             </AccordionTrigger>
             <Separator className="group-data-[state=closed]:opacity-0" />
             <AccordionContent className="p-6 flex flex-col gap-4">
-                <ScrollArea>
-                    <ScrollBar orientation="vertical" />
-                    {/*<div*/}
-                    {/*    className="h-full overflow-auto"*/}
-                    {/*    dangerouslySetInnerHTML={{*/}
-                    {/*        __html: email.body ?? "",*/}
-                    {/*    }}*/}
-                    {/*></div>*/}
-                    <table
-                        role="presentation"
-                        width="100%"
-                        style={{ backgroundColor: "white" }}
-                    >
-                        <tbody>
-                            <tr>
-                                <td style={{ color: "black" }}>
-                                    {renderHtml()}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </ScrollArea>
+                {isPlainTextEmail && <style>{emailStyles}</style>}
+                <div
+                    dangerouslySetInnerHTML={{
+                        __html: sanitizedContent,
+                    }}
+                    className={cn("bg-white text-black", {
+                        "bg-white text-black": isImageEmail,
+                        "bg-background text-foreground": isPlainTextEmail,
+                    })}
+                ></div>
             </AccordionContent>
         </AccordionItem>
     );

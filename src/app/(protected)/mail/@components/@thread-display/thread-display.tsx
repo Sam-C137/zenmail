@@ -5,6 +5,7 @@ import { useGetThreads } from "@/hooks/api/use-get-threads";
 import { ThreadDisplayHeader } from "@/app/(protected)/mail/@components/@thread-display/thread-display-header";
 import { Accordion } from "@/components/ui/accordion";
 import { ThreadDisplayEmail } from "@/app/(protected)/mail/@components/@thread-display/thread-display-email";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface ThreadDisplayProps {
     done: boolean;
@@ -32,24 +33,27 @@ export function ThreadDisplay({ done }: ThreadDisplayProps) {
     if (isPending || !thread) return <ThreadDisplayLoading />;
 
     return (
-        <div className="flex h-full flex-col">
+        <div className="flex flex-col h-full max-h-screen">
             <ThreadDisplayHeader />
             <Separator />
-            <Accordion
-                type="single"
-                defaultValue={thread.emails.at(0)?.id}
-                collapsible
-                className="w-full flex-1"
-                key={thread.emails.at(0)?.id}
-            >
-                {thread.emails.map((mail) => (
-                    <ThreadDisplayEmail
-                        single={thread.emails.length === 1}
-                        email={mail}
-                        key={mail.id}
-                    />
-                ))}
-            </Accordion>
+            <ScrollArea>
+                <ScrollBar orientation="vertical" />
+                <Accordion
+                    type="single"
+                    defaultValue={thread.emails.at(0)?.id}
+                    collapsible
+                    className="w-full flex-1"
+                    key={thread.emails.at(0)?.id}
+                >
+                    {thread.emails.map((mail) => (
+                        <ThreadDisplayEmail
+                            single={thread.emails.length === 1}
+                            email={mail}
+                            key={mail.id}
+                        />
+                    ))}
+                </Accordion>
+            </ScrollArea>
             <Separator className="mt-auto" />
             Reply box
         </div>
