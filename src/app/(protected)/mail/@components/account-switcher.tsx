@@ -22,6 +22,7 @@ import { adventurerNeutral } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAccount } from "@/hooks/api/use-account";
+import { api } from "@/trpc/react";
 
 interface AccountSwitcherProps {
     isCollapsed: boolean;
@@ -32,6 +33,7 @@ export const SELECTED_ACCOUNT_ID = "selectedAccountId";
 export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
     const [ref, bounds] = useMeasure();
     const { selectedAccount, accounts, setSelectedAccountId } = useAccount();
+    const utils = api.useUtils();
 
     return (
         <DropdownMenu>
@@ -114,6 +116,7 @@ export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
                         <DropdownMenuSubContent>
                             <DropdownMenuItem
                                 onClick={async () => {
+                                    await utils.account.invalidate();
                                     window.location.href =
                                         await getAurinkoAuthUrl("Google");
                                 }}
@@ -125,6 +128,7 @@ export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                                 onClick={async () => {
+                                    await utils.account.invalidate();
                                     window.location.href =
                                         await getAurinkoAuthUrl("Office365");
                                 }}

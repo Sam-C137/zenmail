@@ -6,7 +6,9 @@ import { SELECTED_ACCOUNT_ID } from "@/app/(protected)/mail/@components/account-
 import { useIsomorphicLayoutEffect } from "@/hooks/use-Isomorphic-layout-effect";
 
 export function useAccount() {
-    const [accounts] = api.account.me.list.useSuspenseQuery();
+    const [accounts] = api.account.me.list.useSuspenseQuery(undefined, {
+        staleTime: Infinity,
+    });
     const [selectedAccountId, setSelectedAccountId] = useLocalStorage(
         SELECTED_ACCOUNT_ID,
         "",

@@ -12,11 +12,12 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AccountSwitcher } from "@/app/(protected)/mail/@components/account-switcher";
 import { Sidebar } from "@/app/(protected)/mail/@components/@navigation/sidebar";
-import { parseAsBoolean, useQueryState } from "nuqs";
+import { useQueryState } from "nuqs";
 import { ThreadList } from "@/app/(protected)/mail/@components/@thread/thread-list";
 import { Scrollbar } from "@radix-ui/react-scroll-area";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThreadDisplay } from "@/app/(protected)/mail/@components/@thread-display/thread-display";
+import { doneState } from "@/lib/state";
 
 interface MailContentProps {
     defaultLayout?: [number, number, number];
@@ -29,10 +30,7 @@ export function MailContent({
     defaultCollapsed = false,
 }: MailContentProps) {
     const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
-    const [done, setDone] = useQueryState(
-        "done",
-        parseAsBoolean.withDefault(false),
-    );
+    const [done, setDone] = useQueryState(...doneState);
 
     return (
         <TooltipProvider delayDuration={0}>
@@ -78,7 +76,7 @@ export function MailContent({
                 <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
                     <Tabs
-                        className="flex flex-col h-full max-h-screen"
+                        className="flex flex-col h-screen max-h-screen"
                         defaultValue={done.toString()}
                         onValueChange={(done) => setDone(done === "true")}
                     >
@@ -95,7 +93,7 @@ export function MailContent({
                             <Separator />
                             Search bar
                         </div>
-                        <ScrollArea>
+                        <ScrollArea className="h-full">
                             <Scrollbar />
                             <TabsContent value="false">
                                 <ThreadList done={done} />

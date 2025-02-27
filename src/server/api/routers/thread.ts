@@ -33,7 +33,7 @@ const protection = t.middleware(async ({ ctx, next, input }) => {
 
 const threadsSchema = type({
     accountId: "string>1",
-    type: "'trash' | 'sent' | 'inbox' | 'draft'",
+    type: "'trash' | 'sent' | 'inbox' | 'draft' | 'starred'",
 });
 
 export const threadRouter = createTRPCRouter({
@@ -57,6 +57,9 @@ export const threadRouter = createTRPCRouter({
                         ...(input.type === "sent" && {
                             sentStatus: true,
                         }),
+                    }),
+                    ...(input.type === "starred" && {
+                        isStarred: true,
                     }),
                 },
             });
@@ -89,6 +92,9 @@ export const threadRouter = createTRPCRouter({
                         ...(input.type === "sent" && {
                             sentStatus: true,
                         }),
+                    }),
+                    ...(input.type === "starred" && {
+                        isStarred: true,
                     }),
                 },
                 include: {

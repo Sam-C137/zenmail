@@ -13,6 +13,7 @@ import { useState } from "react";
 import { ThreadDeleteOverlay } from "@/app/(protected)/mail/@components/@thread/thread-delete-overlay";
 import { MotionConfig } from "framer-motion";
 import { useLocalStorage } from "@/hooks/use-localstorage";
+import { tabState } from "@/lib/state";
 
 interface ThreadListProps {
     done: boolean;
@@ -32,7 +33,7 @@ export function ThreadList({ done }: ThreadListProps) {
     const [activeThread, setActiveThread] = useQueryState("activeThread");
     const [readyToRemove, setReadyToRemove] = useState(false);
     const [confirmDelete] = useLocalStorage("confirm-delete", "true");
-    const [tab] = useQueryState("tab", { defaultValue: "inbox" });
+    const [tab] = useQueryState(...tabState);
     const {
         selectedThreads,
         handleSelection,
@@ -51,7 +52,7 @@ export function ThreadList({ done }: ThreadListProps) {
             isLoading={isFetching}
             hasMore={hasNextPage}
             next={fetchNextPage}
-            className="p-4 space-y-4"
+            className="p-4 space-y-4 h-full"
         >
             <MotionConfig
                 transition={{ type: "spring", duration: 0.5, bounce: 0.2 }}
@@ -61,7 +62,7 @@ export function ThreadList({ done }: ThreadListProps) {
                         <ThreadItemLoading key={i} />
                     ))}
                 {threads && threads.length < 1 && !hasNextPage && (
-                    <p className="text-center pt-[300px] h-screen text-muted-foreground">
+                    <p className="text-center pt-[300px] text-muted-foreground">
                         <span className="block font-semibold">
                             Nothing in {tab} 📭
                         </span>
@@ -69,7 +70,7 @@ export function ThreadList({ done }: ThreadListProps) {
                     </p>
                 )}
                 {error && !threads && (
-                    <p className="text-center pt-[300px] h-screen text-destructive">
+                    <p className="text-center pt-[300px] text-destructive">
                         Failed to load threads 😢
                     </p>
                 )}
