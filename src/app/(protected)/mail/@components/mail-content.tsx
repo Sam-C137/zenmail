@@ -24,7 +24,7 @@ interface MailContentProps {
     defaultCollapsed?: boolean;
 }
 export function MailContent({
-    defaultLayout = [20, 32, 48],
+    defaultLayout = [20, 35, 45],
     navCollapsedSize,
     defaultCollapsed = false,
 }: MailContentProps) {

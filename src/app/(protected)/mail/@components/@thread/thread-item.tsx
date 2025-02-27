@@ -127,7 +127,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                     tabIndex={0}
                     data-checked={isSelected}
                     className={cn(
-                        "flex group w-full flex-col items-start text-left text-sm space-y-3 rounded-lg border hover:bg-accent data-[checked=true]:pl-8 hover:pl-8 transition-all relative bg-card p-4",
+                        "flex group w-full flex-col items-start text-left text-sm gap-3 rounded-lg border hover:bg-accent data-[checked=true]:pl-8 hover:pl-8 transition-all relative bg-card p-4",
                         isActive && "bg-muted",
                         isSelected && "bg-muted",
                     )}
@@ -168,12 +168,12 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                                 {dates.sentAt}
                             </div>
                         </div>
-                        <p className="text-xs font-medium">
+                        <p className="text-xs !m-0 line-clamp-1 font-medium">
                             {thread.emails.at(-1)?.subject}
                         </p>
                     </div>
                     <p
-                        className="line-clamp-2 !mt-2 text-xs text-muted-foreground"
+                        className="line-clamp-2 !m-0 text-xs text-muted-foreground"
                         dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(
                                 thread.emails
