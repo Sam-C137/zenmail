@@ -18,10 +18,50 @@ export async function syncEmailsToDatabase(emails: Email[], accountId: string) {
     const processedThreadIds = new Set<string>();
 
     try {
+        const uniqueAddresses = new Map<string, Address>();
+        for (const email of emails) {
+            for (const address of [
+                email.from,
+                ...email.to,
+                ...email.cc,
+                ...email.bcc,
+                ...email.replyTo,
+            ]) {
+                if (!uniqueAddresses.has(address.address)) {
+                    uniqueAddresses.set(address.address, address);
+                } else {
+                    uniqueAddresses.set(address.address, {
+                        ...uniqueAddresses.get(address.address),
+                        ...address,
+                    });
+                }
+            }
+        }
+
+        const addressResults = await Promise.all(
+            Array.from(uniqueAddresses.values()).map((address) =>
+                limit(() => upsertEmailAddress(address, accountId)),
+            ),
+        );
+
+        const addressLookup = new Map<
+            string,
+            (typeof addressResults)[number]
+        >();
+        for (const result of addressResults) {
+            if (result) {
+                addressLookup.set(result.address, result);
+            }
+        }
+
         await Promise.all(
             emails.map((email) =>
                 limit(async () => {
-                    const result = await upsertEmail(email, accountId);
+                    const result = await upsertEmail(
+                        email,
+                        accountId,
+                        addressLookup,
+                    );
                     if (result === null) {
                         allSuccessful = false;
                     } else {
@@ -34,21 +74,15 @@ export async function syncEmailsToDatabase(emails: Email[], accountId: string) {
         if (processedThreadIds.size > 0) {
             await Promise.all(
                 Array.from(processedThreadIds).map((threadId) =>
-                    limit(async () => {
-                        await updateThreadDeletionStatus(threadId);
-                    }),
+                    limit(() => updateThreadDeletionStatus(threadId)),
                 ),
             );
         }
 
         if (allSuccessful) {
             await db.account.update({
-                where: {
-                    id: accountId,
-                },
-                data: {
-                    initialSyncStatus: "Completed",
-                },
+                where: { id: accountId },
+                data: { initialSyncStatus: "Completed" },
             });
         }
     } catch (e) {
@@ -57,7 +91,11 @@ export async function syncEmailsToDatabase(emails: Email[], accountId: string) {
     }
 }
 
-async function upsertEmail(email: Email, accountId: string) {
+async function upsertEmail(
+    email: Email,
+    accountId: string,
+    addressLookup: Map<string, Awaited<ReturnType<typeof upsertEmailAddress>>>,
+) {
     try {
         let label: EmailLabel = "inbox";
         if (
@@ -72,45 +110,26 @@ async function upsertEmail(email: Email, accountId: string) {
         } else if (email.sysLabels.includes("trash")) {
             label = "trash";
         }
-        const addresses = new Map<string, Address>();
         const isDeleted = email.sysLabels.includes("trash");
 
-        for (const address of [
-            email.from,
-            ...email.to,
-            ...email.cc,
-            ...email.bcc,
-            ...email.replyTo,
-        ]) {
-            addresses.set(address.address, address);
-        }
-
-        const results: Array<Awaited<ReturnType<typeof upsertEmailAddress>>> =
-            [];
-        for (const address of addresses.values()) {
-            const result = await upsertEmailAddress(address, accountId);
-            results.push(result);
-        }
-
-        const addressMap = new Map(
-            results.filter(Boolean).map((result) => [result?.address, result]),
-        );
-        const from = addressMap.get(email.from.address);
+        const from = addressLookup.get(email.from.address);
         if (!from) {
-            throw new Error("Failed to upsert for email " + email.bodySnippet);
+            throw new Error(
+                "From address missing in lookup: " + email.from.address,
+            );
         }
 
         const to = email.to
-            .map((address) => addressMap.get(address.address))
+            .map((address) => addressLookup.get(address.address))
             .filter(Boolean);
         const cc = email.cc
-            .map((address) => addressMap.get(address.address))
+            .map((address) => addressLookup.get(address.address))
             .filter(Boolean);
         const bcc = email.bcc
-            .map((address) => addressMap.get(address.address))
+            .map((address) => addressLookup.get(address.address))
             .filter(Boolean);
         const replyTo = email.replyTo
-            .map((address) => addressMap.get(address.address))
+            .map((address) => addressLookup.get(address.address))
             .filter(Boolean);
 
         // update thread
@@ -151,7 +170,7 @@ async function upsertEmail(email: Email, accountId: string) {
 
         // update email
         await db.email.upsert({
-            where: { id: email.id },
+            where: { internetMessageId: email.internetMessageId },
             update: {
                 threadId: thread.id,
                 createdTime: new Date(email.createdTime),
@@ -184,6 +203,7 @@ async function upsertEmail(email: Email, accountId: string) {
                 isDeleted,
             },
             create: {
+                id: email.id,
                 threadId: thread.id,
                 createdTime: new Date(email.createdTime),
                 lastModifiedTime: new Date(),
@@ -284,34 +304,26 @@ async function updateThreadDeletionStatus(threadId: string) {
 
 async function upsertEmailAddress(address: Address, accountId: string) {
     try {
-        const existingAddress = await db.emailAddress.findUnique({
-            where: {
-                accountId_address: {
-                    accountId,
-                    address: address.address,
-                },
-            },
-        });
-
-        if (existingAddress) {
-            return await db.emailAddress.findUnique({
+        return await db.$transaction(async (tx) => {
+            return tx.emailAddress.upsert({
                 where: {
                     accountId_address: {
                         accountId,
                         address: address.address,
                     },
                 },
-            });
-        } else {
-            return await db.emailAddress.create({
-                data: {
+                update: {
+                    name: address.name,
+                    raw: address.raw,
+                },
+                create: {
                     name: address.name,
                     address: address.address,
                     raw: address.raw,
                     accountId,
                 },
             });
-        }
+        });
     } catch (e) {
         console.error("Error upserting email address", e);
         return null;
