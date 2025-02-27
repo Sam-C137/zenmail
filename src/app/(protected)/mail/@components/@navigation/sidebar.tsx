@@ -1,6 +1,6 @@
 "use client";
 
-import { FileIcon, InboxIcon, SendIcon, Trash2Icon } from "lucide-react";
+import { FileIcon, InboxIcon, SendIcon, Star, Trash2Icon } from "lucide-react";
 import { NavItem } from "@/app/(protected)/mail/@components/@navigation/nav-item";
 import { useQueryState } from "nuqs";
 import { ThemeToggle } from "@/app/(protected)/mail/@components/@navigation/theme-toggle";
@@ -42,6 +42,12 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                         icon: Trash2Icon,
                         active: tab === "trash",
                         value: "trash",
+                    },
+                    {
+                        title: "Starred",
+                        icon: Star,
+                        active: tab === "starred",
+                        value: "starred",
                     },
                 ]}
             />

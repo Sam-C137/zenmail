@@ -2,9 +2,9 @@ import "@/styles/globals.css";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
-
 import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "next-themes";
+import KBar from "@/components/kbar";
 
 export function generateMetadata(): Metadata {
     const getTitlePrefix = () => {
@@ -42,7 +42,9 @@ export default function RootLayout({
                         enableSystem
                         disableTransitionOnChange
                     >
-                        <NuqsAdapter>{children}</NuqsAdapter>
+                        <NuqsAdapter>
+                            <KBar>{children}</KBar>
+                        </NuqsAdapter>
                     </ThemeProvider>
                 </TRPCReactProvider>
             </body>

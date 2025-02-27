@@ -14,12 +14,13 @@ import { buttonVariants } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryState } from "nuqs";
+import { tabState } from "@/lib/state";
 
 interface Link$ {
     title: string;
     icon: LucideIcon;
     active: boolean;
-    value: EmailLabel;
+    value: EmailLabel | "starred";
 }
 
 interface NavItemProps {
@@ -29,7 +30,8 @@ interface NavItemProps {
 
 export function NavItem({ links, isCollapsed }: NavItemProps) {
     const [selectedAccountId] = useLocalStorage(SELECTED_ACCOUNT_ID, "");
-    const [, setTab] = useQueryState("tab", { defaultValue: "inbox" });
+    const [tab, setTab] = useQueryState(...tabState);
+    const [, setActiveThread] = useQueryState("activeThread");
 
     return (
         <div
@@ -42,7 +44,12 @@ export function NavItem({ links, isCollapsed }: NavItemProps) {
                         <Tooltip key={index} delayDuration={0}>
                             <TooltipTrigger asChild>
                                 <button
-                                    onClick={() => setTab(link.value)}
+                                    onClick={async () => {
+                                        await setTab(link.value);
+                                        if (link.value !== tab) {
+                                            await setActiveThread(null);
+                                        }
+                                    }}
                                     className={cn(
                                         buttonVariants({
                                             variant: link.active
@@ -77,7 +84,12 @@ export function NavItem({ links, isCollapsed }: NavItemProps) {
                     ) : (
                         <span
                             key={index}
-                            onClick={() => setTab(link.value)}
+                            onClick={async () => {
+                                await setTab(link.value);
+                                if (link.value !== tab) {
+                                    await setActiveThread(null);
+                                }
+                            }}
                             className={cn(
                                 buttonVariants({
                                     variant: link.active ? "default" : "ghost",
@@ -105,7 +117,7 @@ export function NavItem({ links, isCollapsed }: NavItemProps) {
 
 interface ThreadCountProps {
     accountId: string;
-    type: EmailLabel;
+    type: EmailLabel | "starred";
     className?: string;
     isActive: boolean;
 }
