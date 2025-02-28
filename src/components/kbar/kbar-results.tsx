@@ -35,7 +35,7 @@ export interface KbarResultItemProps {
 }
 
 const KbarResultItem = React.forwardRef<HTMLDivElement, KbarResultItemProps>(
-    ({ action, active, currentRootActionId, ...props }, ref) => {
+    ({ action, active, currentRootActionId }, ref) => {
         const ancestors = React.useMemo(() => {
             if (!currentRootActionId) return action.ancestors;
             const index = action.ancestors.findIndex(
@@ -47,7 +47,6 @@ const KbarResultItem = React.forwardRef<HTMLDivElement, KbarResultItemProps>(
         return (
             <div
                 ref={ref}
-                {...props}
                 className="px-4 py-2 flex items-center justify-between cursor-pointer relative z-10"
             >
                 {active && (
@@ -55,9 +54,9 @@ const KbarResultItem = React.forwardRef<HTMLDivElement, KbarResultItemProps>(
                         layoutId="kbar-result-item"
                         className="bg-muted border-l-4 rounded border-foreground absolute inset-0 !z-[-1]"
                         transition={{
-                            duration: 0.14,
+                            duration: 0.25,
                             type: "spring",
-                            ease: "easeInOut",
+                            bounce: 0,
                         }}
                     />
                 )}

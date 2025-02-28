@@ -8,6 +8,7 @@ import MailLoadingPage from "./loading";
 import { validateRequest } from "@/server/session";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
+import KBar from "@/components/kbar";
 
 interface MailPageProps {
     searchParams: Promise<{
@@ -47,7 +48,9 @@ export default async function MailPage() {
                     }
                 >
                     <InitialSync userAccount={userAccount}>
-                        <MailContent navCollapsedSize={4} />
+                        <KBar>
+                            <MailContent navCollapsedSize={4} />
+                        </KBar>
                     </InitialSync>
                 </Suspense>
             </InitialSyncErrorBoundary>

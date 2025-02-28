@@ -11,7 +11,7 @@ import { ThreadListToolbar } from "@/app/(protected)/mail/@components/@thread/th
 import { useThreadNavigation } from "@/hooks/use-thread-navigation";
 import { useState } from "react";
 import { ThreadDeleteOverlay } from "@/app/(protected)/mail/@components/@thread/thread-delete-overlay";
-import { MotionConfig } from "framer-motion";
+import { MotionConfig } from "motion/react";
 import { useLocalStorage } from "@/hooks/use-localstorage";
 import { tabState } from "@/lib/state";
 
@@ -62,7 +62,7 @@ export function ThreadList({ done }: ThreadListProps) {
                         <ThreadItemLoading key={i} />
                     ))}
                 {threads && threads.length < 1 && !hasNextPage && (
-                    <p className="text-center pt-[300px] text-muted-foreground">
+                    <p className="text-center pt-[30vh] text-muted-foreground">
                         <span className="block font-semibold">
                             Nothing in {tab} 📭
                         </span>
@@ -70,8 +70,8 @@ export function ThreadList({ done }: ThreadListProps) {
                     </p>
                 )}
                 {error && !threads && (
-                    <p className="text-center pt-[300px] text-destructive">
-                        Failed to load threads 😢
+                    <p className="text-center pt-[30vh] text-destructive">
+                        Failed to load threads 🙁
                     </p>
                 )}
                 {threads &&
