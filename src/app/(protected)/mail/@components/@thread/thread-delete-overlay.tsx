@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "motion/react";
 import { TrashBack, TrashFront } from "./trash-assets";
 import { useCallback, useRef, useState } from "react";
 import type { RouterOutputs } from "@/trpc/react";

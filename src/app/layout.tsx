@@ -4,7 +4,6 @@ import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "next-themes";
-import KBar from "@/components/kbar";
 
 export function generateMetadata(): Metadata {
     const getTitlePrefix = () => {
@@ -42,9 +41,7 @@ export default function RootLayout({
                         enableSystem
                         disableTransitionOnChange
                     >
-                        <NuqsAdapter>
-                            <KBar>{children}</KBar>
-                        </NuqsAdapter>
+                        <NuqsAdapter>{children}</NuqsAdapter>
                     </ThemeProvider>
                 </TRPCReactProvider>
             </body>

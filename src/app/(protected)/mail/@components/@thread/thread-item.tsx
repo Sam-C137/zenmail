@@ -7,7 +7,7 @@ import DOMPurify from "dompurify";
 import { useMemo } from "react";
 import { Mail, MailOpen, Trash2Icon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 

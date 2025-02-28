@@ -25,7 +25,7 @@ export function CommandBar({ children }: React.PropsWithChildren) {
         <>
             <KBarPortal>
                 <KBarPositioner className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm scrollbar-hide !p-0 z-[99999]">
-                    <KBarAnimator className="max-w-[500px] !mt-64 w-full text-foreground bg-background shadow-lg border rounded-lg overflow-hidden relative !-translate-y-12">
+                    <KBarAnimator className="max-w-[500px] !mt-[30vh] w-full text-foreground bg-background shadow-lg border rounded-lg overflow-hidden relative !-translate-y-12">
                         <div className="bg-background">
                             <div
                                 window-bar-label="true"
