@@ -3,7 +3,7 @@ import type {
     EmailAddress,
     EmailAttachment,
     EmailMessage,
-} from "@/lib/email-message";
+} from "@/lib/email.types";
 import pLimit from "p-limit";
 import { type EmailLabel } from "@prisma/client";
 import { db } from "@/server/db";

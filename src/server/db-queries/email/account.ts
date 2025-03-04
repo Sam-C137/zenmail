@@ -3,7 +3,7 @@ import "server-only";
 import { aurinkoApi } from "@/lib/aurinko";
 import { type } from "arktype";
 import { sleep } from "@/lib/utils";
-import { EmailMessage } from "@/lib/email-message";
+import { EmailAddress, EmailMessage } from "@/lib/email.types";
 
 export class Account {
     private readonly token: string;
@@ -12,7 +12,7 @@ export class Account {
         this.token = token;
     }
 
-    async doInitialSync() {
+    public async doInitialSync() {
         try {
             let data = await this.startSync({});
             while (!data.ready) {
@@ -100,6 +100,39 @@ export class Account {
         return this.schemas.getUpdatedEmails.response.assert(response.data);
     }
 
+    /**
+     * Send an email
+     * @param payload
+     */
+    public async sendEmail(
+        payload: typeof this.schemas.sendEmail.mutation.infer,
+    ) {
+        const response = await aurinkoApi.post(
+            "/email/messages",
+            {
+                from: payload.from,
+                subject: payload.subject,
+                body: payload.body,
+                inReplyTo: payload.inReplyTo,
+                references: payload.references,
+                threadId: payload.threadId,
+                to: payload.to,
+                cc: payload.cc,
+                bcc: payload.bcc,
+                replyTo: [payload.replyTo],
+            },
+            {
+                params: {
+                    returnIds: true,
+                },
+                headers: { Authorization: `Bearer ${this.token}` },
+            },
+        );
+
+        console.log("sendmail", response.data);
+        // return response.data;
+    }
+
     private schemas = {
         startSync: {
             query: type({
@@ -122,6 +155,20 @@ export class Account {
                 nextDeltaToken: "string",
                 length: "number",
                 records: EmailMessage.array(),
+            }),
+        },
+        sendEmail: {
+            mutation: type({
+                body: "string>1",
+                subject: "string>1",
+                from: EmailAddress,
+                to: EmailAddress.array(),
+                cc: EmailAddress.array().optional(),
+                bcc: EmailAddress.array().optional(),
+                replyTo: EmailAddress,
+                "inReplyTo?": "string|undefined",
+                "references?": "string|undefined",
+                "threadId?": "string|undefined",
             }),
         },
     };

@@ -16,7 +16,7 @@ export function SubmitButton({
     buttonState,
     buttonStateMapping: {
         idle = "Submit",
-        loading = <Loader size={12} />,
+        loading = <BarsLoader size={12} />,
         success = "Submitted!",
     },
     type = "submit",
@@ -51,7 +51,13 @@ export function SubmitButton({
     );
 }
 
-function Loader({ size, className }: { size?: number; className?: string }) {
+export function BarsLoader({
+    size,
+    className,
+}: {
+    size?: number;
+    className?: string;
+}) {
     return (
         <svg
             width={size ?? 24}
