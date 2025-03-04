@@ -6,6 +6,8 @@ import { ThreadDisplayHeader } from "@/app/(protected)/mail/@components/@thread-
 import { Accordion } from "@/components/ui/accordion";
 import { ThreadDisplayEmail } from "@/app/(protected)/mail/@components/@thread-display/thread-display-email";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ReplyBox } from "@/app/(protected)/mail/@components/@reply/reply-box";
+import { Suspense } from "react";
 
 interface ThreadDisplayProps {
     done: boolean;
@@ -18,7 +20,9 @@ export function ThreadDisplay({ done }: ThreadDisplayProps) {
         .flatMap((page) => page.data)
         .find((thread) => thread.id === activeThread);
 
-    if (!activeThread) {
+    if (isPending) return <ThreadDisplayLoading />;
+
+    if (!activeThread || !thread) {
         return (
             <div className="h-full w-full">
                 <div className="flex items-center justify-center h-full w-full">
@@ -29,8 +33,6 @@ export function ThreadDisplay({ done }: ThreadDisplayProps) {
             </div>
         );
     }
-
-    if (isPending || !thread) return <ThreadDisplayLoading />;
 
     return (
         <div className="flex flex-col h-full max-h-screen">
@@ -55,12 +57,14 @@ export function ThreadDisplay({ done }: ThreadDisplayProps) {
                 </Accordion>
             </ScrollArea>
             <Separator className="mt-auto" />
-            Reply box
+            <Suspense fallback={<ReplyBoxLoading />}>
+                <ReplyBox threadId={activeThread} />
+            </Suspense>
         </div>
     );
 }
 
-export function ThreadDisplayLoading() {
+function ThreadDisplayLoading() {
     return (
         <div className="flex h-full flex-col">
             <div className="flex items-center p-2">
@@ -99,13 +103,19 @@ export function ThreadDisplayLoading() {
                     ))}
                 </div>
                 <Separator className="mt-auto" />
-                <div className="p-4 space-y-4">
-                    <Skeleton className="h-24 w-full" />
-                    <div className="flex items-center justify-between">
-                        <Skeleton className="h-5 w-32" />
-                        <Skeleton className="h-8 w-16" />
-                    </div>
-                </div>
+                <ReplyBoxLoading />
+            </div>
+        </div>
+    );
+}
+
+function ReplyBoxLoading() {
+    return (
+        <div className="p-4 space-y-4">
+            <Skeleton className="h-24 w-full" />
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-8 w-16" />
             </div>
         </div>
     );

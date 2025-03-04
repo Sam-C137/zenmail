@@ -30,8 +30,7 @@ interface NavItemProps {
 
 export function NavItem({ links, isCollapsed }: NavItemProps) {
     const [selectedAccountId] = useLocalStorage(SELECTED_ACCOUNT_ID, "");
-    const [tab, setTab] = useQueryState(...tabState);
-    const [, setActiveThread] = useQueryState("activeThread");
+    const [, setTab] = useQueryState(...tabState);
 
     return (
         <div
@@ -44,12 +43,9 @@ export function NavItem({ links, isCollapsed }: NavItemProps) {
                         <Tooltip key={index} delayDuration={0}>
                             <TooltipTrigger asChild>
                                 <button
-                                    onClick={async () => {
-                                        await setTab(link.value);
-                                        if (link.value !== tab) {
-                                            await setActiveThread(null);
-                                        }
-                                    }}
+                                    onClick={async () =>
+                                        await setTab(link.value)
+                                    }
                                     className={cn(
                                         buttonVariants({
                                             variant: link.active
@@ -84,12 +80,7 @@ export function NavItem({ links, isCollapsed }: NavItemProps) {
                     ) : (
                         <span
                             key={index}
-                            onClick={async () => {
-                                await setTab(link.value);
-                                if (link.value !== tab) {
-                                    await setActiveThread(null);
-                                }
-                            }}
+                            onClick={async () => await setTab(link.value)}
                             className={cn(
                                 buttonVariants({
                                     variant: link.active ? "default" : "ghost",

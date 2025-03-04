@@ -1,67 +1,69 @@
-import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
+import {
+    accountProtectionMiddleware,
+    createTRPCRouter,
+    privateProcedure,
+} from "@/server/api/trpc";
 import { type } from "arktype";
-import { t } from "@/server/api/trpc";
-
-const protection = t.middleware(async ({ ctx, next, input }) => {
-    const values = type({ accountId: "string>1" })(input);
-    if (values instanceof type.errors) {
-        throw new Error("Account id is required");
-    }
-    const account = await ctx.db.account.findFirst({
-        where: {
-            id: values.accountId,
-            userId: ctx.user?.id,
-        },
-        select: {
-            id: true,
-            name: true,
-            emailAddress: true,
-            accessToken: true,
-        },
-    });
-    if (!account) {
-        throw new Error("Account does not exist");
-    }
-    return next({
-        ctx: {
-            ...ctx,
-            account,
-        },
-        input,
-    });
-});
+import { type Prisma } from "@prisma/client";
+import { EmailAddress } from "@/lib/email.types";
+import { Account } from "@/server/db-queries/email/account";
 
 const threadsSchema = type({
     accountId: "string>1",
     type: "'trash' | 'sent' | 'inbox' | 'draft' | 'starred'",
 });
 
+const threadInclude = {
+    emails: {
+        orderBy: {
+            sentAt: "asc",
+        },
+        select: {
+            from: true,
+            body: true,
+            bodySnippet: true,
+            emailLabel: true,
+            subject: true,
+            sysLabels: true,
+            id: true,
+            sentAt: true,
+        },
+    },
+} satisfies Prisma.ThreadInclude;
+
+const threadWhere = (
+    type: (typeof threadsSchema.infer)["type"],
+    accountId: string,
+) => {
+    return {
+        NOT: {
+            isDeleted: type !== "trash",
+        },
+        accountId,
+        ...(type !== "trash" && {
+            ...(type === "inbox" && {
+                inboxStatus: true,
+            }),
+            ...(type === "draft" && {
+                draftStatus: true,
+            }),
+            ...(type === "sent" && {
+                sentStatus: true,
+            }),
+        }),
+        ...(type === "starred" && {
+            isStarred: true,
+        }),
+    } satisfies Prisma.ThreadWhereInput;
+};
+
 export const threadRouter = createTRPCRouter({
     count: privateProcedure
         .input(threadsSchema)
-        .use(protection)
+        .use(accountProtectionMiddleware)
         .query(async ({ ctx, input }) => {
             return await ctx.db.thread.count({
-                where: {
-                    NOT: {
-                        isDeleted: input.type !== "trash",
-                    },
-                    accountId: ctx.account.id,
-                    ...(input.type !== "trash" && {
-                        ...(input.type === "inbox" && {
-                            inboxStatus: true,
-                        }),
-                        ...(input.type === "draft" && {
-                            draftStatus: true,
-                        }),
-                        ...(input.type === "sent" && {
-                            sentStatus: true,
-                        }),
-                    }),
-                    ...(input.type === "starred" && {
-                        isStarred: true,
-                    }),
-                },
+                where: threadWhere(input.type, ctx.account.id),
             });
         }),
     getThreads: privateProcedure
@@ -73,47 +75,12 @@ export const threadRouter = createTRPCRouter({
                 done: "boolean=false",
             }),
         )
-        .use(protection)
+        .use(accountProtectionMiddleware)
         .query(async ({ ctx, input }) => {
             input.take = input.take ?? 15;
             const data = await ctx.db.thread.findMany({
-                where: {
-                    NOT: {
-                        isDeleted: input.type !== "trash",
-                    },
-                    accountId: ctx.account.id,
-                    ...(input.type !== "trash" && {
-                        ...(input.type === "inbox" && {
-                            inboxStatus: true,
-                        }),
-                        ...(input.type === "draft" && {
-                            draftStatus: true,
-                        }),
-                        ...(input.type === "sent" && {
-                            sentStatus: true,
-                        }),
-                    }),
-                    ...(input.type === "starred" && {
-                        isStarred: true,
-                    }),
-                },
-                include: {
-                    emails: {
-                        orderBy: {
-                            sentAt: "asc",
-                        },
-                        select: {
-                            from: true,
-                            body: true,
-                            bodySnippet: true,
-                            emailLabel: true,
-                            subject: true,
-                            sysLabels: true,
-                            id: true,
-                            sentAt: true,
-                        },
-                    },
-                },
+                where: threadWhere(input.type, ctx.account.id),
+                include: threadInclude,
                 take: input.take + 1,
                 cursor: input.cursor ? { id: input.cursor } : undefined,
                 orderBy: {
@@ -127,5 +94,96 @@ export const threadRouter = createTRPCRouter({
                 nextCursor:
                     data.length > input.take ? data[data.length - 1]?.id : null,
             };
+        }),
+    getReplyDetails: privateProcedure
+        .input(
+            type({
+                "...": threadsSchema.pick("accountId"),
+                threadId: "string>1",
+                replyType: "'reply' | 'replyAll'",
+            }),
+        )
+        .use(accountProtectionMiddleware)
+        .query(async ({ ctx, input }) => {
+            const thread = await ctx.db.thread.findUnique({
+                where: { id: input.threadId },
+                include: {
+                    emails: {
+                        orderBy: { sentAt: "asc" },
+                        select: {
+                            from: true,
+                            to: true,
+                            cc: true,
+                            bcc: true,
+                            sentAt: true,
+                            subject: true,
+                            internetMessageId: true,
+                        },
+                    },
+                },
+            });
+
+            if (!thread || thread.emails.length === 0) {
+                throw new Error("Thread not found or empty");
+            }
+
+            const lastExternalEmail = thread.emails
+                .reverse()
+                .find((email) => email.from.id !== ctx.account.id);
+
+            if (!lastExternalEmail) {
+                throw new Error("No external email found in thread");
+            }
+
+            if (input.replyType === "reply") {
+                return {
+                    to: [lastExternalEmail.from],
+                    cc: [],
+                    from: {
+                        name: ctx.account.name,
+                        address: ctx.account.emailAddress,
+                    },
+                    subject: `${lastExternalEmail.subject}`,
+                    internetMessageId: lastExternalEmail.internetMessageId,
+                };
+            } else if (input.replyType === "replyAll") {
+                return {
+                    to: [
+                        lastExternalEmail.from,
+                        ...lastExternalEmail.to.filter(
+                            (addr) => addr.id !== ctx.account.id,
+                        ),
+                    ],
+                    cc: lastExternalEmail.cc.filter(
+                        (addr) => addr.id !== ctx.account.id,
+                    ),
+                    from: {
+                        name: ctx.account.name,
+                        address: ctx.account.emailAddress,
+                    },
+                    subject: `${lastExternalEmail.subject}`,
+                    internetMessageId: lastExternalEmail.internetMessageId,
+                };
+            }
+        }),
+    reply: privateProcedure
+        .input(
+            type({
+                "...": threadsSchema.pick("accountId"),
+                body: "string>1",
+                subject: "string>1",
+                from: EmailAddress,
+                to: EmailAddress.array(),
+                cc: EmailAddress.array().optional(),
+                bcc: EmailAddress.array().optional(),
+                replyTo: EmailAddress,
+                "inReplyTo?": "string|undefined",
+                "threadId?": "string|undefined",
+            }),
+        )
+        .use(accountProtectionMiddleware)
+        .mutation(async ({ ctx, input }) => {
+            const account = new Account(ctx.account.id);
+            await account.sendEmail(input);
         }),
 });

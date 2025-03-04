@@ -6,6 +6,8 @@ import {
 } from "kbar";
 import { motion } from "motion/react";
 import React from "react";
+import { KeyboardKey } from "@/components/ui/keyboard-key";
+import { cn } from "@/lib/utils";
 
 export function KBarResults() {
     const { results, rootActionId } = useMatches();
@@ -87,12 +89,15 @@ const KbarResultItem = React.forwardRef<HTMLDivElement, KbarResultItemProps>(
                 {action.shortcut && action.shortcut.length > 0 && (
                     <div className="grid grid-flow-col gap-1 relative z-10">
                         {action.shortcut.map((sc) => (
-                            <kbd
+                            <KeyboardKey
                                 key={sc}
-                                className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-1 border border-gray-200 dark:border-gray-700 shadow font-medium rounded-md text-xs flex items-center gap-1"
+                                className={cn(
+                                    "shadow text-foreground",
+                                    active && "border-muted-foreground/70",
+                                )}
                             >
                                 {sc}
-                            </kbd>
+                            </KeyboardKey>
                         ))}
                     </div>
                 )}

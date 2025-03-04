@@ -12,6 +12,7 @@ import { ZodError } from "zod";
 
 import { db } from "@/server/db";
 import { validateRequest } from "@/server/session";
+import { type } from "arktype";
 
 /**
  * 1. CONTEXT
@@ -41,7 +42,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
  * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
-export const t = initTRPC.context<typeof createTRPCContext>().create({
+const t = initTRPC.context<typeof createTRPCContext>().create({
     transformer: superjson,
     errorFormatter({ shape, error }) {
         return {
@@ -112,6 +113,37 @@ const authMiddleware = t.middleware(async ({ ctx, next }) => {
         },
     });
 });
+
+export const accountProtectionMiddleware = t.middleware(
+    async ({ ctx, next, input }) => {
+        const values = type({ accountId: "string>1" })(input);
+        if (values instanceof type.errors) {
+            throw new Error("Account id is required");
+        }
+        const account = await ctx.db.account.findFirst({
+            where: {
+                id: values.accountId,
+                userId: ctx.user?.id,
+            },
+            select: {
+                id: true,
+                name: true,
+                emailAddress: true,
+                accessToken: true,
+            },
+        });
+        if (!account) {
+            throw new Error("Account does not exist");
+        }
+        return next({
+            ctx: {
+                ...ctx,
+                account,
+            },
+            input,
+        });
+    },
+);
 
 /**
  * Public (unauthenticated) procedure
