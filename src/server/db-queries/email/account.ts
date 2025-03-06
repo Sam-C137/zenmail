@@ -3,7 +3,11 @@ import "server-only";
 import { aurinkoApi } from "@/lib/aurinko";
 import { type } from "arktype";
 import { sleep } from "@/lib/utils";
-import { EmailAddress, EmailMessage } from "@/lib/email.types";
+import {
+    EmailAddress,
+    EmailMessage,
+    OutGoingEmailAttachment,
+} from "@/lib/email.types";
 
 export class Account {
     private readonly token: string;
@@ -120,6 +124,7 @@ export class Account {
                 cc: payload.cc,
                 bcc: payload.bcc,
                 replyTo: [payload.replyTo],
+                attachments: payload.attachments ?? [],
             },
             {
                 params: {
@@ -130,7 +135,7 @@ export class Account {
         );
 
         console.log("sendmail", response.data);
-        // return response.data;
+        return this.schemas.sendEmail.response.assert(response.data);
     }
 
     private schemas = {
@@ -166,9 +171,21 @@ export class Account {
                 cc: EmailAddress.array().optional(),
                 bcc: EmailAddress.array().optional(),
                 replyTo: EmailAddress,
+                attachments: OutGoingEmailAttachment.array().optional(),
                 "inReplyTo?": "string|undefined",
                 "references?": "string|undefined",
                 "threadId?": "string|undefined",
+            }),
+            response: type({
+                status: "'Ok'|string",
+                id: "string",
+                threadId: "string",
+                trackingId: "string",
+                processingStatus: "'Ok'|string",
+                processingError: type({
+                    failedSteps: "string[]",
+                    errorMessage: "string",
+                }).optional(),
             }),
         },
     };

@@ -8,6 +8,7 @@ import { ThreadDisplayEmail } from "@/app/(protected)/mail/@components/@thread-d
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ReplyBox } from "@/app/(protected)/mail/@components/@reply/reply-box";
 import { Suspense } from "react";
+import { AttachmentContextProvider } from "@/app/(protected)/mail/@components/@reply/attachment";
 
 interface ThreadDisplayProps {
     done: boolean;
@@ -58,7 +59,9 @@ export function ThreadDisplay({ done }: ThreadDisplayProps) {
             </ScrollArea>
             <Separator className="mt-auto" />
             <Suspense fallback={<ReplyBoxLoading />}>
-                <ReplyBox threadId={activeThread} />
+                <AttachmentContextProvider>
+                    <ReplyBox key={activeThread} threadId={activeThread} />
+                </AttachmentContextProvider>
             </Suspense>
         </div>
     );
@@ -67,7 +70,7 @@ export function ThreadDisplay({ done }: ThreadDisplayProps) {
 function ThreadDisplayLoading() {
     return (
         <div className="flex h-full flex-col">
-            <div className="flex items-center p-2">
+            <div className="flex items-center p-2.5">
                 <div className="flex items-center gap-2">
                     {[...Array<unknown>(4)].map((_, i) => (
                         <Skeleton key={i} className="h-8 w-8" />

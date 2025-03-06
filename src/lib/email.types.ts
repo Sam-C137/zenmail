@@ -12,9 +12,17 @@ export const EmailAttachment = type({
     mimeType: "string",
     size: "number",
     inline: "boolean",
-    contentId: "string",
-    content: "string",
-    contentLocation: "string",
+    "contentId?": "string",
+    "content?": "string",
+    "contentLocation?": "string",
+});
+
+export const OutGoingEmailAttachment = type({
+    inline: "boolean",
+    name: "string>1",
+    mimeType: "string>1",
+    contentId: "string.uuid",
+    content: "string.base64",
 });
 
 export const EmailHeader = type({

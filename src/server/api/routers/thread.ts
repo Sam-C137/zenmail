@@ -5,7 +5,7 @@ import {
 } from "@/server/api/trpc";
 import { type } from "arktype";
 import { type Prisma } from "@prisma/client";
-import { EmailAddress } from "@/lib/email.types";
+import { EmailAddress, OutGoingEmailAttachment } from "@/lib/email.types";
 import { Account } from "@/server/db-queries/email/account";
 
 const threadsSchema = type({
@@ -177,12 +177,15 @@ export const threadRouter = createTRPCRouter({
                 cc: EmailAddress.array().optional(),
                 bcc: EmailAddress.array().optional(),
                 replyTo: EmailAddress,
+                attachments: OutGoingEmailAttachment.array().optional(),
                 "inReplyTo?": "string|undefined",
                 "threadId?": "string|undefined",
             }),
         )
         .use(accountProtectionMiddleware)
         .mutation(async ({ ctx, input }) => {
+            console.log(input);
+            return;
             const account = new Account(ctx.account.id);
             await account.sendEmail(input);
         }),
