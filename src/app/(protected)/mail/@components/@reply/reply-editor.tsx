@@ -1,7 +1,7 @@
 "use client";
 
 import { type Editor, EditorContent } from "@tiptap/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ReplyEditorMenuBar } from "./reply-editor-menu-bar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,12 @@ import {
     useAttachment,
 } from "@/app/(protected)/mail/@components/@reply/attachment";
 import { type } from "arktype";
+import { AiComposeButton } from "@/app/(protected)/mail/@components/@reply/ai-compose-button";
+import { useGetThreads } from "@/hooks/api/use-get-threads";
+import { useQueryState } from "nuqs";
+import { doneState } from "@/lib/state";
+import { htmlToText } from "@/lib/utils";
+import { useSession } from "@/app/session-provider";
 
 interface ReplyEditorProps {
     value: string;
@@ -49,15 +55,24 @@ export function ReplyEditor({
     isSending,
     handleSend,
 }: ReplyEditorProps) {
-    const [expanded, setExpanded] = useState(defaultExpanded ?? false);
     const device = useDeviceType();
+    const [done] = useQueryState(...doneState);
+    const [expanded, setExpanded] = useState(defaultExpanded ?? false);
+    const { user } = useSession();
     const { dropzone, onPaste, files } = useAttachment();
-    const { selectedAccountId } = useAccount();
+    const { selectedAccountId, selectedAccount } = useAccount();
+    const [activeThread] = useQueryState("activeThread");
+    const { data: threads } = useGetThreads({ done });
     const { data } = api.emailAddress.list.useQuery({
         accountId: selectedAccountId,
         query: "",
     });
     const suggestions = data?.map((s) => s.address) ?? [];
+    const thread = useMemo(() => {
+        return threads?.pages
+            .flatMap((page) => page.data)
+            .find((thread) => thread.id === activeThread);
+    }, [activeThread, threads?.pages]);
 
     const isButtonDisabled = () => {
         if (files.length > 0) return false;
@@ -66,6 +81,33 @@ export function ReplyEditor({
         if (toValues.length < 1) return true;
         return isSending;
     };
+
+    const aiContext = useMemo(() => {
+        return (
+            thread?.emails
+                .map((email) => htmlToText(email.body ?? ""))
+                .reduce((prev, curr, idx) => {
+                    return (
+                        prev +
+                        `Subject: ${thread?.emails[idx]?.subject ?? ""}
+                      From: ${thread?.emails[idx]?.from?.name ?? ""}
+                    ` +
+                        curr +
+                        "\n<!--email-separator-->" +
+                        (idx === thread?.emails.length - 1
+                            ? `
+                         My name is ${user.firstName} ${user.lastName} and my email is ${selectedAccount?.emailAddress}
+                        `
+                            : "\n")
+                    );
+                }, "") ?? ""
+        );
+    }, [
+        selectedAccount?.emailAddress,
+        thread?.emails,
+        user.firstName,
+        user.lastName,
+    ]);
 
     if (!editor) return null;
 
@@ -125,14 +167,23 @@ export function ReplyEditor({
                     </AnimatePresence>
                     <div className="flex items-center gap-2 text-sm">
                         <div className="flex justify-between items-center w-full">
-                            <div
-                                className="cursor-pointer"
-                                onClick={() => setExpanded((e) => !e)}
-                            >
-                                <span className="text-blue-500 font-medium">
-                                    Draft{" "}
-                                </span>
-                                <span>to {to.join(", ")}</span>
+                            <div className="flex gap-2 items-center">
+                                <div
+                                    className="cursor-pointer"
+                                    onClick={() => setExpanded((e) => !e)}
+                                >
+                                    <span className="text-blue-500 font-medium">
+                                        Draft{" "}
+                                    </span>
+                                    <span>to {to.join(", ")}</span>
+                                </div>
+                                <AiComposeButton
+                                    isComposing={!!defaultExpanded}
+                                    onGenerate={(text) => {
+                                        editor?.commands.insertContent(text);
+                                    }}
+                                    context={aiContext}
+                                />
                             </div>
                             <Button
                                 variant="ghost"
@@ -140,10 +191,9 @@ export function ReplyEditor({
                                 className="size-6"
                                 onClick={dropzone.open}
                             >
-                                <Paperclip className="h-4 w-4" />
+                                <Paperclip className="size-4" />
                             </Button>
                         </div>
-                        {/*  Ai compose  */}
                     </div>
                 </div>
             </div>

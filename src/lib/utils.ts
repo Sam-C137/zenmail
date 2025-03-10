@@ -1,5 +1,6 @@
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import DOMPurify from "dompurify";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -33,4 +34,34 @@ export function formatSize(sizeInBytes: number) {
     }
 
     return `${size.toFixed(2)} ${units[i]}`;
+}
+
+export function htmlToText(html: string) {
+    html = DOMPurify.sanitize(html, {});
+
+    const doc = new DOMParser().parseFromString(html, "text/html");
+
+    const extractText = (node: Node): string => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent?.trim() ?? "";
+        }
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as HTMLElement;
+
+            if (element.tagName === "A") {
+                return ` [${element.textContent?.trim()}] (link here) `;
+            }
+
+            if (["SCRIPT", "STYLE", "IMG"].includes(element.tagName)) {
+                return "";
+            }
+
+            return Array.from(node.childNodes).map(extractText).join(" ");
+        }
+
+        return "";
+    };
+
+    return extractText(doc.body).replace(/\s+/g, " ").trim();
 }
