@@ -31,23 +31,13 @@ export function AttachmentContextProvider({
     children,
 }: React.PropsWithChildren) {
     const [files, setFiles] = React.useState<File[]>([]);
-    const onDrop = React.useCallback(
-        (droppedFiles: File[]) => {
-            setFiles([...files, ...droppedFiles]);
-        },
-        [files],
-    );
+    const onDrop = React.useCallback((droppedFiles: File[]) => {
+        setFiles((files) => [...files, ...droppedFiles]);
+    }, []);
     const dropzone = useDropzone({
         noClick: true,
         noKeyboard: true,
         multiple: true,
-        accept: {
-            ...MimeTypes.application,
-            ...MimeTypes.audio,
-            ...MimeTypes.image,
-            ...MimeTypes.font,
-            ...MimeTypes.text,
-        },
         onDrop,
     });
 
