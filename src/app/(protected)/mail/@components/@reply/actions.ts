@@ -1,6 +1,6 @@
 "use server";
 
-import { generateText } from "ai";
+import { generateText, streamText } from "ai";
 import { google } from "@ai-sdk/google";
 import { type } from "arktype";
 
@@ -14,7 +14,7 @@ export async function generateEmail({
     prompt,
 }: typeof generateEmailSchema.infer): Promise<
     | {
-          output: string;
+          output: ReadableStream<Uint8Array>;
           error: null;
       }
     | {
@@ -35,7 +35,7 @@ export async function generateEmail({
             };
         }
 
-        const response = await generateText({
+        const response = streamText({
             model: google("gemini-2.0-flash-lite-preview-02-05"),
             prompt: `
             You are an AI email assistant embedded in an email client app. Your purpose is to help the user compose emails by providing suggestions and relevant information based on the context of their previous emails.
@@ -65,7 +65,7 @@ export async function generateEmail({
             `,
         });
 
-        return { output: response.text, error: null };
+        return { output: response.toDataStream(), error: null };
     } catch (e) {
         console.error(e);
         return { output: null, error: "An error occurred" };
