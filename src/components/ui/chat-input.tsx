@@ -69,6 +69,7 @@ interface ChatInputTextAreaProps extends React.ComponentProps<typeof Textarea> {
     onChange?: React.ChangeEventHandler<HTMLTextAreaElement>;
     onSubmit?: () => void;
     variant?: "default" | "unstyled";
+    autoResize?: boolean;
 }
 
 function ChatInputTextArea({
@@ -77,6 +78,7 @@ function ChatInputTextArea({
     onChange: onChangeProp,
     className,
     variant: variantProp,
+    autoResize,
     ...props
 }: ChatInputTextAreaProps) {
     const context = useContext(ChatInputContext);
@@ -89,7 +91,7 @@ function ChatInputTextArea({
     const variant =
         variantProp ?? (context.variant === "default" ? "unstyled" : "default");
 
-    const textareaRef = useTextareaResize(value, rows);
+    const textareaRef = useTextareaResize(value, rows, autoResize);
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         e.stopPropagation();
         if (!onSubmit) {

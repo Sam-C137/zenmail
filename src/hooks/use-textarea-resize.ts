@@ -6,10 +6,12 @@ import type { ComponentProps } from "react";
 export function useTextareaResize(
     value: ComponentProps<"textarea">["value"],
     rows = 1,
+    enabled = true,
 ) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     useLayoutEffect(() => {
+        if (!enabled) return;
         const textArea = textareaRef.current;
 
         if (textArea) {
