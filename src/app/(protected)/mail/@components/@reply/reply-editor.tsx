@@ -23,7 +23,7 @@ import { AiComposeButton } from "@/app/(protected)/mail/@components/@reply/ai-co
 import { useGetThreads } from "@/hooks/api/use-get-threads";
 import { useQueryState } from "nuqs";
 import { doneState } from "@/lib/state";
-import { htmlToText } from "@/lib/utils";
+import { filterKeyEvents, htmlToText } from "@/lib/utils";
 import { useSession } from "@/app/session-provider";
 
 interface ReplyEditorProps {
@@ -200,7 +200,7 @@ export function ReplyEditor({
             <div className="prose text-sm w-full max-h-full p-4">
                 <EditorContent
                     editor={editor}
-                    onKeyDown={(e) => e.stopPropagation()}
+                    onKeyDown={filterKeyEvents}
                     value={value}
                     onPaste={onPaste}
                     className="text-sm max-w-full h-full max-h-[200px] overflow-auto"
@@ -213,7 +213,7 @@ export function ReplyEditor({
                     <KeyboardKey className="w-max">
                         {device === "iOS" || device === "Mac" ? "⌘" : "ctrl"}
                     </KeyboardKey>{" "}
-                    <KeyboardKey>J</KeyboardKey> for AI autocomplete
+                    <KeyboardKey>Y</KeyboardKey> for AI autocomplete
                 </span>
                 <Button
                     onClick={async () => {
