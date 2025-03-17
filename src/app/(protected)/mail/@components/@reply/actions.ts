@@ -1,6 +1,6 @@
 "use server";
 
-import { generateText, streamText } from "ai";
+import { streamText } from "ai";
 import { google } from "@ai-sdk/google";
 import { type } from "arktype";
 
@@ -62,6 +62,58 @@ export async function generateEmail({
             - Directly output the email, no need to say 'Here is your email' or 'Understood' you can think of yourself as a pure function which just spits out email body.
             - No need to output subject lines, just the body of the email.
             - When giving a draft response avoid telling the user about lack of context or any apologetic behavior, ignore the context and focus on returning pure email body that can be sent right away.
+            `,
+        });
+
+        return { output: response.toDataStream(), error: null };
+    } catch (e) {
+        console.error(e);
+        return { output: null, error: "An error occurred" };
+    }
+}
+
+export async function suggestAutocomplete(input: string): Promise<
+    | {
+          output: ReadableStream<Uint8Array>;
+          error: null;
+      }
+    | {
+          output: null;
+          error: string;
+      }
+> {
+    try {
+        console.log("called action");
+        if (type("string>0")(input) instanceof type.errors) {
+            return { output: null, error: "Invalid input" };
+        }
+
+        const response = streamText({
+            model: google("gemini-2.0-flash-lite-preview-02-05"),
+            prompt: `
+            ALWAYS RESPOND IN PLAIN TEXT, no HTML or Markdown.
+            You are a helpful AI embedded in an email client app that is used to autocomplete sentences, similar to google gmail autocomplete
+            Some of your traits include expert knowledge, helpfulness, cleverness, and articulateness.
+            You are a well-behaved and well-mannered individual.
+            You are always friendly, kind, and inspiring, and he is eager to provide vivid and thoughtful responses to the user.
+            I am writing a piece of text in a notion text editor app.
+            Help me complete my train of thought here: <input>${input}</input>
+            keep the tone of the text consistent with the rest of the text.
+            keep the response short and sweet. Act like a co—pilot, finish my sentence if need be, but don't try to generate a whole new paragraph.
+            Do not add fluff like "I'm here to help you" or "I'm a helpful AI" or anything like that.
+
+            Example:
+            Dear Alice, I'm sorry to hear that you are feeling down.
+
+            Output: I hoped to write this touching email to express my concerns with your recent loss.
+
+            Your output is directly concatenated to the input, so do not add any new lines or formatting, just plain text.
+            
+            Full Line: Dear Alice, I'm sorry to hear that you are feeling down. I hoped to write this touching email to express my concerns with your recent loss.  
+            
+            IMPORTANT NOTE:
+            NEVER ADD ANY EXTRA CONTENT OR BAD THINGS MAY HAPPEN, JUST SUGGEST THE TEXT COMPLETION WITHOUT ANY FORMALITIES OR BLUFF
+            MAKE THE EXPERIENCE AS SEEMLESS AS POSSIBLE
             `,
         });
 

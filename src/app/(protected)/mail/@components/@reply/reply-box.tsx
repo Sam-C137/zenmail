@@ -5,11 +5,12 @@ import { useState } from "react";
 import { type Option } from "@/components/ui/multiselect";
 import { useToast } from "@/hooks/use-toast";
 import { useAttachment } from "@/app/(protected)/mail/@components/@reply/attachment";
-import { fToBase64 } from "@/lib/utils";
+import { fToBase64, processAICompletion, streamAIOutput } from "@/lib/utils";
 import { Text } from "@tiptap/extension-text";
 import { useEditor } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extension-placeholder";
+import { suggestAutocomplete } from "@/app/(protected)/mail/@components/@reply/actions";
 
 interface ReplyBoxProps {
     threadId: string;
@@ -46,10 +47,32 @@ export function ReplyBox({ threadId }: ReplyBoxProps) {
     const [value, setValue] = useState("");
     const placeHolderName = replyDetails?.to.at(-1)?.name ?? "";
 
+    const autoComplete = async (value: string) => {
+        const { error, output } = await suggestAutocomplete(value);
+        if (error || !output) return "";
+        let out = "";
+        for await (const line of streamAIOutput(output)) {
+            out += line;
+        }
+        return out;
+    };
+
     const AutoCompleteText = Text.extend({
         addKeyboardShortcuts() {
             return {
-                "Meta-j": () => {
+                "Mod-y": ({ editor }) => {
+                    autoComplete(editor.getText())
+                        .then((value) => {
+                            if (value) {
+                                editor.commands.setContent(
+                                    processAICompletion(
+                                        editor.getText(),
+                                        value,
+                                    ),
+                                );
+                            }
+                        })
+                        .catch(console.warn);
                     return true;
                 },
             };

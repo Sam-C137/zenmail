@@ -20,7 +20,7 @@ import { BotIcon, CornerDownLeft, RotateCcw, Sparkles } from "lucide-react";
 import { generateEmail } from "@/app/(protected)/mail/@components/@reply/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
+import { cn, streamAIOutput } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
     Tooltip,
@@ -61,29 +61,16 @@ export function AiComposeButton({
             return;
         }
 
-        const reader = output.getReader();
-        const decoder = new TextDecoder();
         setSuggestions((prev) => [...prev, ""]);
         if (activeIdx < suggestions.length) {
             setActiveIdx(suggestions.length);
         }
         setActiveIdx((prev) => prev + 1);
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                break;
-            }
-
-            const line = decoder.decode(value);
-            if (line.startsWith("0")) {
-                const clean = line
-                    .substring(3, line.length - 2)
-                    .replace(/\\n/g, "\n");
-                setSuggestions((prev) => {
-                    const last = prev.length - 1;
-                    return prev.map((s, idx) => (idx === last ? s + clean : s));
-                });
-            }
+        for await (const line of streamAIOutput(output)) {
+            setSuggestions((prev) => {
+                const last = prev.length - 1;
+                return prev.map((s, idx) => (idx === last ? s + line : s));
+            });
         }
     };
 
@@ -125,7 +112,7 @@ export function AiComposeButton({
                             placeholder="Give a subtle description..."
                             className="px-1 h-full"
                             style={{
-                                height: suggestions.length > 1 ? 80 : "auto",
+                                height: suggestions.length > 0 ? 80 : "auto",
                             }}
                             autoResize={false}
                         />
