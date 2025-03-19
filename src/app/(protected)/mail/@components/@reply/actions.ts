@@ -72,7 +72,10 @@ export async function generateEmail({
     }
 }
 
-export async function suggestAutocomplete(input: string): Promise<
+export async function suggestAutocomplete(
+    input: string,
+    context?: string,
+): Promise<
     | {
           output: ReadableStream<Uint8Array>;
           error: null;
@@ -83,7 +86,6 @@ export async function suggestAutocomplete(input: string): Promise<
       }
 > {
     try {
-        console.log("called action");
         if (type("string>0")(input) instanceof type.errors) {
             return { output: null, error: "Invalid input" };
         }
@@ -98,6 +100,7 @@ export async function suggestAutocomplete(input: string): Promise<
             You are always friendly, kind, and inspiring, and he is eager to provide vivid and thoughtful responses to the user.
             I am writing a piece of text in a notion text editor app.
             Help me complete my train of thought here: <input>${input}</input>
+            ${context ? `USE THIS AS CONTEXT OF THE CURRENT EMAIL: ${context}` : ""}
             keep the tone of the text consistent with the rest of the text.
             keep the response short and sweet. Act like a co—pilot, finish my sentence if need be, but don't try to generate a whole new paragraph.
             Do not add fluff like "I'm here to help you" or "I'm a helpful AI" or anything like that.

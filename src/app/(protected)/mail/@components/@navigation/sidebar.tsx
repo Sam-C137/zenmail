@@ -4,6 +4,9 @@ import { FileIcon, InboxIcon, SendIcon, Star, Trash2Icon } from "lucide-react";
 import { NavItem } from "@/app/(protected)/mail/@components/@navigation/nav-item";
 import { useQueryState } from "nuqs";
 import { ThemeToggle } from "@/app/(protected)/mail/@components/@navigation/theme-toggle";
+import { UserButton } from "@/app/(protected)/mail/@components/@navigation/user-button";
+import { ComposeButton } from "@/app/(protected)/mail/@components/@navigation/compose-button";
+import { AttachmentContextProvider } from "@/app/(protected)/mail/@components/@reply/attachment";
 
 interface SidebarProps {
     isCollapsed: boolean;
@@ -52,7 +55,13 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                 ]}
             />
             <div className="flex-1"></div>
-            <ThemeToggle />
+            <div className="flex flex-wrap gap-2">
+                <UserButton />
+                <ThemeToggle />
+                <AttachmentContextProvider>
+                    <ComposeButton />
+                </AttachmentContextProvider>
+            </div>
         </>
     );
 }

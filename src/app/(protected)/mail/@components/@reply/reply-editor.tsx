@@ -36,7 +36,7 @@ interface ReplyEditorProps {
     ccValues: Option[];
     onCcChange: (values: Option[]) => void;
     editor: Editor | null;
-    handleSend: (value: string) => Promise<void>;
+    handleSend: (value: string) => void | Promise<void>;
     isSending: boolean;
     defaultExpanded?: boolean;
 }
@@ -161,6 +161,7 @@ export function ReplyEditor({
                                     placeholder="Subject"
                                     value={subject}
                                     onChange={(e) => setSubject(e.target.value)}
+                                    onKeyDown={filterKeyEvents}
                                 />
                             </motion.div>
                         )}
@@ -213,7 +214,7 @@ export function ReplyEditor({
                     <KeyboardKey className="w-max">
                         {device === "iOS" || device === "Mac" ? "⌘" : "ctrl"}
                     </KeyboardKey>{" "}
-                    <KeyboardKey>Y</KeyboardKey> for AI autocomplete
+                    + <KeyboardKey>Y</KeyboardKey> for AI autocomplete
                 </span>
                 <Button
                     onClick={async () => {
