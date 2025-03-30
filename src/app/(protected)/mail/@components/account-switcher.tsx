@@ -28,8 +28,6 @@ interface AccountSwitcherProps {
     isCollapsed: boolean;
 }
 
-export const SELECTED_ACCOUNT_ID = "selectedAccountId";
-
 export function AccountSwitcher({ isCollapsed }: AccountSwitcherProps) {
     const [ref, bounds] = useMeasure();
     const { selectedAccount, accounts, setSelectedAccountId } = useAccount();

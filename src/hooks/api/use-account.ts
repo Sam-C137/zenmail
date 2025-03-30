@@ -2,15 +2,15 @@
 
 import { api } from "@/trpc/react";
 import { useLocalStorage } from "@/hooks/use-localstorage";
-import { SELECTED_ACCOUNT_ID } from "@/app/(protected)/mail/@components/account-switcher";
 import { useIsomorphicLayoutEffect } from "@/hooks/use-Isomorphic-layout-effect";
+import { keys } from "@/lib/constants";
 
 export function useAccount() {
     const [accounts] = api.account.me.list.useSuspenseQuery(undefined, {
         staleTime: Infinity,
     });
     const [selectedAccountId, setSelectedAccountId] = useLocalStorage(
-        SELECTED_ACCOUNT_ID,
+        keys.LocalStorage.SelectedAccountId,
         "",
     );
     const selectedAccount = accounts.find(

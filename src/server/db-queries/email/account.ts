@@ -65,7 +65,7 @@ export class Account {
     private async startSync({
         daysWithin = 15,
         bodyType = "html",
-    }: Partial<typeof this.schemas.startSync.query.infer>) {
+    }: Partial<typeof schemas.startSync.query.infer>) {
         const response = await aurinkoApi.post(
             "/email/sync",
             {},
@@ -80,7 +80,7 @@ export class Account {
             },
         );
 
-        return this.schemas.startSync.response.assert(response.data);
+        return schemas.startSync.response.assert(response.data);
     }
 
     /**
@@ -90,7 +90,7 @@ export class Account {
     private async getUpdatedEmails({
         deltaToken,
         pageToken,
-    }: Partial<typeof this.schemas.getUpdatedEmails.query.infer>) {
+    }: Partial<typeof schemas.getUpdatedEmails.query.infer>) {
         const response = await aurinkoApi.get("/email/sync/updated", {
             headers: {
                 Authorization: `Bearer ${this.token}`,
@@ -101,28 +101,18 @@ export class Account {
             },
         });
 
-        return this.schemas.getUpdatedEmails.response.assert(response.data);
+        return schemas.getUpdatedEmails.response.assert(response.data);
     }
 
     /**
      * Send an email
      * @param payload
      */
-    public async sendEmail(
-        payload: typeof this.schemas.sendEmail.mutation.infer,
-    ) {
+    public async sendEmail(payload: typeof schemas.sendEmail.mutation.infer) {
         const response = await aurinkoApi.post(
             "/email/messages",
             {
-                from: payload.from,
-                subject: payload.subject,
-                body: payload.body,
-                inReplyTo: payload.inReplyTo,
-                references: payload.references,
-                threadId: payload.threadId,
-                to: payload.to,
-                cc: payload.cc,
-                bcc: payload.bcc,
+                ...payload,
                 replyTo: [payload.replyTo],
                 attachments: payload.attachments ?? [],
             },
@@ -134,59 +124,58 @@ export class Account {
             },
         );
 
-        console.log("sendmail", response.data);
-        return this.schemas.sendEmail.response.assert(response.data);
+        return schemas.sendEmail.response.assert(response.data);
     }
-
-    private schemas = {
-        startSync: {
-            query: type({
-                daysWithin: "number",
-                bodyType: "'html'|'text'",
-            }),
-            response: type({
-                syncUpdatedToken: "string",
-                syncDeletedToken: "string",
-                ready: "boolean",
-            }),
-        },
-        getUpdatedEmails: {
-            query: type({
-                "deltaToken?": "string|null",
-                "pageToken?": "string|null",
-            }),
-            response: type({
-                "nextPageToken?": "string",
-                nextDeltaToken: "string",
-                length: "number",
-                records: EmailMessage.array(),
-            }),
-        },
-        sendEmail: {
-            mutation: type({
-                body: "string>1",
-                subject: "string>1",
-                from: EmailAddress,
-                to: EmailAddress.array(),
-                cc: EmailAddress.array().optional(),
-                bcc: EmailAddress.array().optional(),
-                replyTo: EmailAddress,
-                attachments: OutGoingEmailAttachment.array().optional(),
-                "inReplyTo?": "string|undefined",
-                "references?": "string|undefined",
-                "threadId?": "string|undefined",
-            }),
-            response: type({
-                status: "'Ok'|string",
-                id: "string",
-                threadId: "string",
-                trackingId: "string",
-                processingStatus: "'Ok'|string",
-                processingError: type({
-                    failedSteps: "string[]",
-                    errorMessage: "string",
-                }).optional(),
-            }),
-        },
-    };
 }
+
+const schemas = {
+    startSync: {
+        query: type({
+            daysWithin: "number",
+            bodyType: "'html'|'text'",
+        }),
+        response: type({
+            syncUpdatedToken: "string",
+            syncDeletedToken: "string",
+            ready: "boolean",
+        }),
+    },
+    getUpdatedEmails: {
+        query: type({
+            "deltaToken?": "string|null",
+            "pageToken?": "string|null",
+        }),
+        response: type({
+            "nextPageToken?": "string",
+            nextDeltaToken: "string",
+            length: "number",
+            records: EmailMessage.array(),
+        }),
+    },
+    sendEmail: {
+        mutation: type({
+            body: "string>1",
+            subject: "string>1",
+            from: EmailAddress,
+            to: EmailAddress.array(),
+            cc: EmailAddress.array().optional(),
+            bcc: EmailAddress.array().optional(),
+            replyTo: EmailAddress,
+            attachments: OutGoingEmailAttachment.array().optional(),
+            "inReplyTo?": "string|undefined",
+            "references?": "string|undefined",
+            "threadId?": "string|undefined",
+        }),
+        response: type({
+            status: "'Ok'|string",
+            id: "string",
+            threadId: "string",
+            processingStatus: "'Ok'|string",
+            "trackingId?": "string|undefined",
+            "processingError?": type({
+                "failedSteps?": "string[]",
+                "errorMessage?": "string|undefined",
+            }),
+        }),
+    },
+};

@@ -30,7 +30,7 @@ export function UserButton() {
                             buttonVariants({
                                 variant: "ghost",
                             }),
-                            "w-full border-b h-full gap-4 justify-start flex hover:bg-transparent",
+                            "w-full rounded-none border-b h-full gap-4 justify-start flex hover:bg-transparent",
                         )}
                     >
                         <Avatar>
@@ -48,7 +48,7 @@ export function UserButton() {
                         </div>
                     </div>
                     <Button
-                        className="border-b gap-4 w-full flex justify-start"
+                        className="border-b rounded-none gap-4 w-full flex justify-start"
                         variant="ghost"
                     >
                         <Settings className="size-4" /> Manage Account
