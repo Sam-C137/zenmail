@@ -5,6 +5,25 @@ export const time = {
     Hour: 3_600_000,
 } as const;
 
+export const size = {
+    KB: 1024,
+    MB: 1_048_576,
+    GB: 1_073_741_824,
+    TB: 1_099_511_627_776,
+} as const;
+
+export const keys = {
+    LocalStorage: {
+        SelectedAccountId: "selectedAccountId",
+        ConfirmOnDelete: "confirm-delete",
+    },
+    QueryParams: {
+        ActiveThread: "activeThread",
+        Tab: "tab",
+        Done: "done",
+    },
+} as const;
+
 export const MimeTypes = {
     audio: {
         "audio/aac": [".aac"],

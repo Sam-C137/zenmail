@@ -4,7 +4,7 @@ import { Command as CommandPrimitive, useCommandState } from "cmdk";
 import * as React from "react";
 import { forwardRef, useEffect } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
-import { cn } from "@/lib/utils";
+import { cn, filterKeyEvents } from "@/lib/utils";
 import {
     Command,
     CommandGroup,
@@ -12,6 +12,7 @@ import {
     CommandList,
 } from "@/components/ui/command";
 import { X } from "lucide-react";
+import { type, type Type } from "arktype";
 
 export interface Option {
     value: string;
@@ -40,13 +41,13 @@ interface MultipleSelectorProps {
     delay?: number;
     /**
      * Only work with `onSearch` prop. Trigger search when `onFocus`.
-     * For example, when user click on the input, it will trigger the search to get initial options.
+     * For example, when a user clicks on the input, it will trigger the search to get initial options.
      **/
     triggerSearchOnFocus?: boolean;
     /** async search */
     onSearch?: (value: string) => Promise<Option[]>;
     /**
-     * sync search. This search will not showing loadingIndicator.
+     * sync search. This search will not show loadingIndicator.
      * The rest props are the same as async search.
      * i.e.: creatable, groupBy, delay.
      **/
@@ -59,13 +60,13 @@ interface MultipleSelectorProps {
     /** Hide the placeholder when there are options selected. */
     hidePlaceholderWhenSelected?: boolean;
     disabled?: boolean;
-    /** Group the options base on provided key. */
+    /** Group the option base on provided key. */
     groupBy?: string;
     className?: string;
     badgeClassName?: string;
     /**
-     * First item selected is a default behavior by cmdk. That is why the default is true.
-     * This is a workaround solution by add a dummy item.
+     * The First item selected is a default behavior by cmdk. That is why the default is true.
+     * This is a workaround solution by adding a dummy item.
      *
      * @reference: https://github.com/pacocoursey/cmdk/issues/171
      */
@@ -79,8 +80,10 @@ interface MultipleSelectorProps {
         React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>,
         "value" | "placeholder" | "disabled"
     >;
-    /** hide the clear all button. */
+    /** hide the clear-all button. */
     hideClearAllButton?: boolean;
+    /** a schema to call when the user hits enter on some input text */
+    inputSchema?: Type<unknown>;
 }
 
 export interface MultipleSelectorRef {
@@ -194,6 +197,7 @@ const MultipleSelector = React.forwardRef<
             inputProps,
             hideClearAllButton = false,
             selectedDisplayLimit = 5,
+            inputSchema,
         }: MultipleSelectorProps,
         ref: React.Ref<MultipleSelectorRef>,
     ) => {
@@ -245,6 +249,7 @@ const MultipleSelector = React.forwardRef<
 
         const handleKeyDown = React.useCallback(
             (e: React.KeyboardEvent<HTMLDivElement>) => {
+                filterKeyEvents(e);
                 const input = inputRef.current;
                 if (input) {
                     if (e.key === "Delete" || e.key === "Backspace") {
@@ -261,9 +266,21 @@ const MultipleSelector = React.forwardRef<
                     if (e.key === "Escape") {
                         input.blur();
                     }
+
+                    if (e.key === "Enter") {
+                        if (
+                            !inputSchema ||
+                            !(inputSchema(input.value) instanceof type.errors)
+                        ) {
+                            handleOptionSelect({
+                                label: input.value,
+                                value: input.value,
+                            });
+                        }
+                    }
                 }
             },
-            [handleUnselect, selected],
+            [inputSchema, handleUnselect, selected],
         );
 
         useEffect(() => {
@@ -368,17 +385,7 @@ const MultipleSelector = React.forwardRef<
                         e.stopPropagation();
                     }}
                     onSelect={(value: string) => {
-                        if (selected.length >= maxSelected) {
-                            onMaxSelected?.(selected.length);
-                            return;
-                        }
-                        setInputValue("");
-                        const newOptions = [
-                            ...selected,
-                            { value, label: value },
-                        ];
-                        setSelected(newOptions);
-                        onChange?.(newOptions);
+                        handleOptionSelect({ value, label: value });
                     }}
                 >
                     {`Create "${inputValue}"`}
@@ -434,6 +441,17 @@ const MultipleSelector = React.forwardRef<
             // Using default filter in `cmdk`. We don't have to provide it.
             return undefined;
         }, [creatable, commandProps?.filter]);
+
+        const handleOptionSelect = (option: Option) => {
+            if (selected.length >= maxSelected) {
+                onMaxSelected?.(selected.length);
+                return;
+            }
+            setInputValue("");
+            const newOptions = [...selected, option];
+            setSelected(newOptions);
+            onChange?.(newOptions);
+        };
 
         return (
             <Command
@@ -531,6 +549,20 @@ const MultipleSelector = React.forwardRef<
                             onBlur={(event) => {
                                 if (!onScrollbar) {
                                     setOpen(false);
+                                }
+                                if (inputValue) {
+                                    if (
+                                        !inputSchema ||
+                                        !(
+                                            inputSchema(inputValue) instanceof
+                                            type.errors
+                                        )
+                                    ) {
+                                        handleOptionSelect({
+                                            label: inputValue,
+                                            value: inputValue,
+                                        });
+                                    }
                                 }
                                 inputProps?.onBlur?.(event);
                             }}
@@ -644,28 +676,8 @@ const MultipleSelector = React.forwardRef<
                                                                             e.stopPropagation();
                                                                         }}
                                                                         onSelect={() => {
-                                                                            if (
-                                                                                selected.length >=
-                                                                                maxSelected
-                                                                            ) {
-                                                                                onMaxSelected?.(
-                                                                                    selected.length,
-                                                                                );
-                                                                                return;
-                                                                            }
-                                                                            setInputValue(
-                                                                                "",
-                                                                            );
-                                                                            const newOptions =
-                                                                                [
-                                                                                    ...selected,
-                                                                                    option,
-                                                                                ];
-                                                                            setSelected(
-                                                                                newOptions,
-                                                                            );
-                                                                            onChange?.(
-                                                                                newOptions,
+                                                                            handleOptionSelect(
+                                                                                option,
                                                                             );
                                                                         }}
                                                                         className={cn(

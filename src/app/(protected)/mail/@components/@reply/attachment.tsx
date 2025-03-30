@@ -1,7 +1,6 @@
 import React from "react";
 import { type DropzoneState, useDropzone } from "react-dropzone";
 import { type } from "arktype";
-import { MimeTypes } from "@/lib/constants";
 import {
     Dialog,
     DialogContent,

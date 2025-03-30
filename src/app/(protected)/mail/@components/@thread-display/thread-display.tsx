@@ -9,13 +9,14 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ReplyBox } from "@/app/(protected)/mail/@components/@reply/reply-box";
 import { Suspense } from "react";
 import { AttachmentContextProvider } from "@/app/(protected)/mail/@components/@reply/attachment";
+import { keys } from "@/lib/constants";
 
 interface ThreadDisplayProps {
     done: boolean;
 }
 
 export function ThreadDisplay({ done }: ThreadDisplayProps) {
-    const [activeThread] = useQueryState("activeThread");
+    const [activeThread] = useQueryState(keys.QueryParams.ActiveThread);
     const { data, isPending } = useGetThreads({ done });
     const thread = data?.pages
         .flatMap((page) => page.data)

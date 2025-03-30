@@ -3,7 +3,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { EmailLabel } from "@prisma/client";
 import { useLocalStorage } from "@/hooks/use-localstorage";
-import { SELECTED_ACCOUNT_ID } from "@/app/(protected)/mail/@components/account-switcher";
 import {
     Tooltip,
     TooltipContent,
@@ -15,6 +14,7 @@ import { api } from "@/trpc/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryState } from "nuqs";
 import { tabState } from "@/lib/state";
+import { keys } from "@/lib/constants";
 
 interface Link$ {
     title: string;
@@ -29,7 +29,10 @@ interface NavItemProps {
 }
 
 export function NavItem({ links, isCollapsed }: NavItemProps) {
-    const [selectedAccountId] = useLocalStorage(SELECTED_ACCOUNT_ID, "");
+    const [selectedAccountId] = useLocalStorage(
+        keys.LocalStorage.SelectedAccountId,
+        "",
+    );
     const [, setTab] = useQueryState(...tabState);
 
     return (

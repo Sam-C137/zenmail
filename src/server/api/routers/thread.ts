@@ -180,13 +180,31 @@ export const threadRouter = createTRPCRouter({
                 attachments: OutGoingEmailAttachment.array().optional(),
                 "inReplyTo?": "string|undefined",
                 "threadId?": "string|undefined",
+                "references?": "string|undefined",
             }),
         )
         .use(accountProtectionMiddleware)
         .mutation(async ({ ctx, input }) => {
-            console.log(input);
-            return;
-            const account = new Account(ctx.account.id);
+            const account = new Account(ctx.account.accessToken);
+            await account.sendEmail(input);
+        }),
+    send: privateProcedure
+        .input(
+            type({
+                "...": threadsSchema.pick("accountId"),
+                body: "string>1",
+                subject: "string>1",
+                from: EmailAddress,
+                to: EmailAddress.array(),
+                cc: EmailAddress.array().optional(),
+                bcc: EmailAddress.array().optional(),
+                replyTo: EmailAddress,
+                attachments: OutGoingEmailAttachment.array().optional(),
+            }),
+        )
+        .use(accountProtectionMiddleware)
+        .mutation(async ({ ctx, input }) => {
+            const account = new Account(ctx.account.accessToken);
             await account.sendEmail(input);
         }),
 });

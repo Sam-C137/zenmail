@@ -14,6 +14,7 @@ import { ThreadDeleteOverlay } from "@/app/(protected)/mail/@components/@thread/
 import { MotionConfig } from "motion/react";
 import { useLocalStorage } from "@/hooks/use-localstorage";
 import { tabState } from "@/lib/state";
+import { keys } from "@/lib/constants";
 
 interface ThreadListProps {
     done: boolean;
@@ -30,9 +31,14 @@ export function ThreadList({ done }: ThreadListProps) {
         error,
     } = useGetThreads({ done });
     const threads = data?.pages.flatMap((page) => page.data);
-    const [activeThread, setActiveThread] = useQueryState("activeThread");
+    const [activeThread, setActiveThread] = useQueryState(
+        keys.QueryParams.ActiveThread,
+    );
     const [readyToRemove, setReadyToRemove] = useState(false);
-    const [confirmDelete] = useLocalStorage("confirm-delete", "true");
+    const [confirmDelete] = useLocalStorage(
+        keys.LocalStorage.ConfirmOnDelete,
+        "true",
+    );
     const [tab] = useQueryState(...tabState);
     const {
         selectedThreads,

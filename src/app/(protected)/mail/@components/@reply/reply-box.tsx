@@ -9,6 +9,9 @@ import { fToBase64 } from "@/lib/utils";
 import { useEditor } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extension-placeholder";
+import { Link } from "@tiptap/extension-link";
+import { Color } from "@tiptap/extension-color";
+import { TextStyle } from "@tiptap/extension-text-style";
 import { useAIAutocompleteExtension } from "@/hooks/use-ai-autocomplete-extension";
 
 interface ReplyBoxProps {
@@ -52,6 +55,9 @@ export function ReplyBox({ threadId }: ReplyBoxProps) {
         extensions: [
             StarterKit,
             AutoCompleteText,
+            Link,
+            Color,
+            TextStyle,
             Placeholder.configure({
                 placeholder: `Reply ${placeHolderName}...`,
             }),

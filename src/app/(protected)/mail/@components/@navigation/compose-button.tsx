@@ -18,6 +18,13 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { useAIAutocompleteExtension } from "@/hooks/use-ai-autocomplete-extension";
 import { ReplyEditor } from "@/app/(protected)/mail/@components/@reply/reply-editor";
+import { fToBase64 } from "@/lib/utils";
+import { api } from "@/trpc/react";
+import { useToast } from "@/hooks/use-toast";
+import { useAccount } from "@/hooks/api/use-account";
+import { Link } from "@tiptap/extension-link";
+import { Color } from "@tiptap/extension-color";
+import { TextStyle } from "@tiptap/extension-text-style";
 
 export function ComposeButton() {
     const { files } = useAttachment();
@@ -26,12 +33,18 @@ export function ComposeButton() {
     const [toValues, setToValues] = useState<Option[]>([]);
     const [ccValues, setCcValues] = useState<Option[]>([]);
     const [value, setValue] = useState("");
+    const { toast } = useToast();
+    const { selectedAccountId, selectedAccount } = useAccount();
+    const sendEmail = api.thread.send.useMutation();
 
     const editor = useEditor({
         autofocus: false,
         extensions: [
             StarterKit,
             AutoCompleteText,
+            Link,
+            Color,
+            TextStyle,
             Placeholder.configure({
                 placeholder: `Hello...`,
             }),
@@ -42,8 +55,58 @@ export function ComposeButton() {
         immediatelyRender: false,
     });
 
-    const handleSend = () => {
-        console.log("handlesend");
+    const handleSend = async (value: string) => {
+        try {
+            const attachments = await Promise.all(
+                files.map(async (file) => ({
+                    inline: true,
+                    name: file.name,
+                    mimeType: file.type,
+                    contentId: crypto.randomUUID(),
+                    content: await fToBase64(file),
+                })),
+            );
+            sendEmail.mutate(
+                {
+                    accountId: selectedAccountId,
+                    attachments,
+                    body: value,
+                    subject,
+                    from: {
+                        name: selectedAccount?.name,
+                        address: selectedAccount?.emailAddress ?? "",
+                    },
+                    to: toValues.map((to) => ({
+                        name: to.label,
+                        address: to.value,
+                    })),
+                    cc: ccValues.map((cc) => ({
+                        name: cc.label,
+                        address: cc.value,
+                    })),
+                    replyTo: {
+                        name: selectedAccount?.name,
+                        address: selectedAccount?.emailAddress ?? "",
+                    },
+                },
+                {
+                    onSuccess: () => {
+                        toast({
+                            description: "Email sent",
+                        });
+                        editor?.commands.clearContent();
+                    },
+                    onError: (e) => {
+                        toast({
+                            variant: "destructive",
+                            description: e.message,
+                        });
+                    },
+                },
+            );
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     return (
@@ -75,7 +138,7 @@ export function ComposeButton() {
                         setAIContext(`Subject: ${subject}`);
                     }}
                     handleSend={handleSend}
-                    isSending={false}
+                    isSending={sendEmail.isPending}
                     defaultExpanded
                 />
             </DrawerContent>

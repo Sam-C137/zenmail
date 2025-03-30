@@ -8,6 +8,7 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocalStorage } from "@/hooks/use-localstorage";
+import { keys } from "@/lib/constants";
 
 interface ThreadDeleteOverlayProps {
     selectedThreads: string[];
@@ -23,7 +24,10 @@ export function ThreadDeleteOverlay({
     onClose,
 }: ThreadDeleteOverlayProps) {
     const [removed, setRemoved] = useState(false);
-    const [, setConfirmDelete] = useLocalStorage("confirm-delete", true);
+    const [, setConfirmDelete] = useLocalStorage(
+        keys.LocalStorage.ConfirmOnDelete,
+        true,
+    );
     const ref = useRef(null);
     useOnClickOutside(ref, onClose);
     const threadsToRemove =

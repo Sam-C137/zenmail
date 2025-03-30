@@ -25,6 +25,7 @@ import { useQueryState } from "nuqs";
 import { doneState } from "@/lib/state";
 import { filterKeyEvents, htmlToText } from "@/lib/utils";
 import { useSession } from "@/app/session-provider";
+import { keys } from "@/lib/constants";
 
 interface ReplyEditorProps {
     value: string;
@@ -61,7 +62,7 @@ export function ReplyEditor({
     const { user } = useSession();
     const { dropzone, onPaste, files } = useAttachment();
     const { selectedAccountId, selectedAccount } = useAccount();
-    const [activeThread] = useQueryState("activeThread");
+    const [activeThread] = useQueryState(keys.QueryParams.ActiveThread);
     const { data: threads } = useGetThreads({ done });
     const { data } = api.emailAddress.list.useQuery({
         accountId: selectedAccountId,
@@ -265,6 +266,7 @@ export function EmailSelect({
         label: s,
         value: s,
     }));
+
     return (
         <div className="border rounded-md flex items-center mb-1">
             <span className="ml-3 text-sm text-muted-foreground">{label}</span>
@@ -273,6 +275,7 @@ export function EmailSelect({
                     label: "Select email",
                 }}
                 value={value}
+                inputSchema={type("string.email")}
                 defaultOptions={options}
                 hidePlaceholderWhenSelected
                 onChange={onChange}

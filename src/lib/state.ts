@@ -1,6 +1,7 @@
 import { parseAsBoolean, type UseQueryStateOptions } from "nuqs";
 import type { EmailLabel } from "@prisma/client";
 import { type } from "arktype";
+import { keys } from "@/lib/constants";
 
 type QueryState<T> = [
     key: string,
@@ -10,7 +11,7 @@ type QueryState<T> = [
 ];
 
 export const tabState: QueryState<EmailLabel | "starred"> = [
-    "tab" as const,
+    keys.QueryParams.Tab,
     {
         defaultValue: "inbox",
         parse: (value: unknown) => {
@@ -26,6 +27,6 @@ export const tabState: QueryState<EmailLabel | "starred"> = [
 ];
 
 export const doneState: QueryState<boolean> = [
-    "done",
+    keys.QueryParams.Done,
     parseAsBoolean.withDefault(false),
 ];

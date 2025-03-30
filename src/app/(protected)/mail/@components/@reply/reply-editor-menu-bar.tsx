@@ -4,10 +4,8 @@ import {
     Heading1,
     Heading2,
     Heading3,
-    Heading4,
-    Heading5,
-    Heading6,
     Italic,
+    LinkIcon,
     List,
     ListOrdered,
     Quote,
@@ -17,6 +15,16 @@ import {
 } from "lucide-react";
 import type { Editor } from "@tiptap/react";
 import { cn } from "@/lib/utils";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useCallback, useState } from "react";
+import { useIsomorphicLayoutEffect } from "@/hooks/use-Isomorphic-layout-effect";
+import { type } from "arktype";
 
 interface ReplyEditorMenuBarProps {
     editor: Editor;
@@ -99,39 +107,6 @@ export function ReplyEditorMenuBar({ editor }: ReplyEditorMenuBarProps) {
                 <Heading3 className="size-4 text-secondary-foreground" />
             </button>
             <button
-                onClick={() =>
-                    editor.chain().focus().toggleHeading({ level: 4 }).run()
-                }
-                className={cn(
-                    "p-1 rounded-sm",
-                    editor.isActive("heading", { level: 4 }) && "bg-muted",
-                )}
-            >
-                <Heading4 className="size-4 text-secondary-foreground" />
-            </button>
-            <button
-                onClick={() =>
-                    editor.chain().focus().toggleHeading({ level: 5 }).run()
-                }
-                className={cn(
-                    "p-1 rounded-sm",
-                    editor.isActive("heading", { level: 5 }) && "bg-muted",
-                )}
-            >
-                <Heading5 className="size-4 text-secondary-foreground" />
-            </button>
-            <button
-                onClick={() =>
-                    editor.chain().focus().toggleHeading({ level: 6 }).run()
-                }
-                className={cn(
-                    "p-1 rounded-sm",
-                    editor.isActive("heading", { level: 6 }) && "bg-muted",
-                )}
-            >
-                <Heading6 className="size-4 text-secondary-foreground" />
-            </button>
-            <button
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
                 className={cn(
                     "p-1 rounded-sm",
@@ -149,6 +124,7 @@ export function ReplyEditorMenuBar({ editor }: ReplyEditorMenuBarProps) {
             >
                 <ListOrdered className="size-4 text-secondary-foreground" />
             </button>
+            <EditorLink editor={editor} />
             <button
                 onClick={() => editor.chain().focus().toggleBlockquote().run()}
                 className={cn(
@@ -173,5 +149,94 @@ export function ReplyEditorMenuBar({ editor }: ReplyEditorMenuBarProps) {
                 <Redo className="size-4 text-secondary-foreground" />
             </button>
         </div>
+    );
+}
+
+function EditorLink({ editor }: ReplyEditorMenuBarProps) {
+    const [linkUrl, setLinkUrl] = useState<string>("");
+    const [linkOpen, setLinkOpen] = useState<boolean>(false);
+
+    useIsomorphicLayoutEffect(() => {
+        if (linkOpen && editor.isActive("link")) {
+            setLinkUrl((editor.getAttributes("link").href as string) || "");
+        } else if (linkOpen) {
+            setLinkUrl("");
+        }
+    }, [linkOpen, editor]);
+
+    const setLink = useCallback(() => {
+        if (editor.state.selection.empty) {
+            return;
+        }
+
+        if (!linkUrl) {
+            editor.chain().focus().extendMarkRange("link").unsetLink().run();
+            setLinkOpen(false);
+            return;
+        }
+
+        const url =
+            linkUrl.startsWith("http://") || linkUrl.startsWith("https://")
+                ? linkUrl
+                : `https://${linkUrl}`;
+
+        editor
+            .chain()
+            .focus()
+            .extendMarkRange("link")
+            .setLink({ href: url })
+            .run();
+        setLinkOpen(false);
+    }, [editor, linkUrl]);
+
+    const isActive = editor.isActive("link");
+    const isInvalid = type("string.url")(linkUrl) instanceof type.errors;
+    return (
+        <Popover open={linkOpen} onOpenChange={setLinkOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    className={cn("p-1 rounded-sm", isActive && "bg-muted")}
+                >
+                    <LinkIcon className="size-4 text-secondary-foreground" />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-3">
+                <div className="flex flex-col gap-2">
+                    <Input
+                        placeholder="Enter URL"
+                        value={linkUrl}
+                        onChange={(e) => setLinkUrl(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                if (isInvalid) return;
+                                e.preventDefault();
+                                setLink();
+                            }
+                        }}
+                    />
+                    <div className="flex justify-between">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                editor.chain().focus().unsetLink().run();
+                                setLinkOpen(false);
+                            }}
+                            disabled={!isActive || isInvalid}
+                        >
+                            Remove Link
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={setLink}
+                            disabled={editor.state.selection.empty}
+                        >
+                            Add Link
+                        </Button>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }
