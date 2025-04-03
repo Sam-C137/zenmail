@@ -8,6 +8,8 @@ import {
     EmailMessage,
     OutGoingEmailAttachment,
 } from "@/lib/email.types";
+import { db } from "@/server/db";
+import { syncEmailsToDatabase } from "@/server/db-queries/email/sync-to-db";
 
 export class Account {
     private readonly token: string;
@@ -125,6 +127,59 @@ export class Account {
         );
 
         return schemas.sendEmail.response.assert(response.data);
+    }
+
+    public async syncEmails() {
+        const account = await db.account.findUnique({
+            where: {
+                accessToken: this.token,
+            },
+        });
+        if (!account) {
+            throw new Error("Account not found");
+        }
+        if (!account.nextDeltaToken) {
+            throw new Error("No delta token found");
+        }
+        let savedToken = account.nextDeltaToken;
+        let response = await this.getUpdatedEmails({
+            deltaToken: account.nextDeltaToken,
+        });
+        if (response.nextDeltaToken) {
+            savedToken = response.nextDeltaToken;
+        }
+
+        let emails = Array.from(response.records);
+        while (response.nextPageToken) {
+            response = await this.getUpdatedEmails({
+                deltaToken: savedToken,
+                pageToken: response.nextPageToken,
+            });
+            emails = [...emails, ...response.records];
+            if (response.nextDeltaToken) {
+                savedToken = response.nextDeltaToken;
+            }
+        }
+
+        try {
+            await syncEmailsToDatabase(emails, account.id);
+        } catch (e) {
+            console.error("Error syncing emails to database", e);
+        }
+
+        await db.account.update({
+            where: {
+                id: account.id,
+            },
+            data: {
+                nextDeltaToken: savedToken,
+            },
+        });
+
+        return {
+            emails,
+            deltaToken: savedToken,
+        };
     }
 }
 

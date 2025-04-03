@@ -40,10 +40,6 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
         },
         ref,
     ) => {
-        const labels = Array.from(
-            new Set(thread.emails.flatMap((email) => email.sysLabels)),
-        );
-
         const dates = useMemo(() => {
             return {
                 category: format(
@@ -153,7 +149,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                                     {thread.emails.at(-1)?.from?.name ??
                                         "Unknown Sender"}
                                 </h4>
-                                {labels.includes("unread") && (
+                                {thread.sysLabels.includes("unread") && (
                                     <span className="flex h-2 w-2 rounded-full bg-blue-600" />
                                 )}
                             </div>
@@ -188,7 +184,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                         }}
                     ></p>
                     <div className="flex space-x-2">
-                        {labels.map((label) => (
+                        {thread.sysLabels.map((label) => (
                             <Badge
                                 key={label}
                                 variant={getBadgeVariantFromLabel(label)}

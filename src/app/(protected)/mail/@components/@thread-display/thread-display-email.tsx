@@ -15,7 +15,7 @@ import DOMPurify from "dompurify";
 import { useMemo } from "react";
 
 interface ThreadDisplayEmailProps {
-    email: RouterOutputs["thread"]["getThreads"]["data"][number]["emails"][number];
+    email: RouterOutputs["thread"]["getThread"]["emails"][number];
     single?: boolean;
 }
 

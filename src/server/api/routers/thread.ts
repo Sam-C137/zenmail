@@ -13,49 +13,20 @@ const threadsSchema = type({
     type: "'trash' | 'sent' | 'inbox' | 'draft' | 'starred'",
 });
 
-const threadInclude = {
-    emails: {
-        orderBy: {
-            sentAt: "asc",
-        },
-        select: {
-            from: true,
-            body: true,
-            bodySnippet: true,
-            emailLabel: true,
-            subject: true,
-            sysLabels: true,
-            id: true,
-            sentAt: true,
-        },
-    },
-} satisfies Prisma.ThreadInclude;
-
 const threadWhere = (
     type: (typeof threadsSchema.infer)["type"],
     accountId: string,
-) => {
-    return {
-        NOT: {
-            isDeleted: type !== "trash",
-        },
+) =>
+    ({
+        NOT: { isDeleted: type !== "trash" },
         accountId,
         ...(type !== "trash" && {
-            ...(type === "inbox" && {
-                inboxStatus: true,
-            }),
-            ...(type === "draft" && {
-                draftStatus: true,
-            }),
-            ...(type === "sent" && {
-                sentStatus: true,
-            }),
+            ...(type === "inbox" && { inboxStatus: true }),
+            ...(type === "draft" && { draftStatus: true }),
+            ...(type === "sent" && { sentStatus: true }),
         }),
-        ...(type === "starred" && {
-            isStarred: true,
-        }),
-    } satisfies Prisma.ThreadWhereInput;
-};
+        ...(type === "starred" && { isStarred: true }),
+    }) satisfies Prisma.ThreadWhereInput;
 
 export const threadRouter = createTRPCRouter({
     count: privateProcedure
@@ -78,21 +49,83 @@ export const threadRouter = createTRPCRouter({
         .use(accountProtectionMiddleware)
         .query(async ({ ctx, input }) => {
             input.take = input.take ?? 15;
-            const data = await ctx.db.thread.findMany({
+
+            const threads = await ctx.db.thread.findMany({
                 where: threadWhere(input.type, ctx.account.id),
-                include: threadInclude,
+                select: {
+                    id: true,
+                    subject: true,
+                    lastMessageDate: true,
+                    done: true,
+                    emails: {
+                        select: {
+                            sysLabels: true,
+                        },
+                    },
+                },
                 take: input.take + 1,
                 cursor: input.cursor ? { id: input.cursor } : undefined,
-                orderBy: {
-                    lastMessageDate: "desc",
+                orderBy: { lastMessageDate: "desc" },
+            });
+
+            const latestEmails = await ctx.db.email.findMany({
+                where: { threadId: { in: threads.map((t) => t.id) } },
+                orderBy: { sentAt: "desc" },
+                distinct: ["threadId"],
+                select: {
+                    id: true,
+                    threadId: true,
+                    from: true,
+                    bodySnippet: true,
+                    subject: true,
+                    emailLabel: true,
+                    sentAt: true,
+                    sysLabels: true,
+                },
+            });
+
+            const data = threads.map((thread) => ({
+                ...thread,
+                sysLabels: Array.from(
+                    new Set(thread.emails.flatMap((e) => e.sysLabels)),
+                ),
+                emails: [latestEmails.find((e) => e.threadId === thread.id)!],
+            }));
+
+            return {
+                data: data.slice(0, input.take),
+                done: threads.length <= input.take,
+                nextCursor:
+                    threads.length > input.take
+                        ? threads[threads.length - 1]?.id
+                        : null,
+            };
+        }),
+    getThread: privateProcedure
+        .input(
+            type({
+                "...": threadsSchema.pick("accountId"),
+                threadId: "string>1",
+            }),
+        )
+        .use(accountProtectionMiddleware)
+        .query(async ({ ctx, input }) => {
+            const emails = await ctx.db.email.findMany({
+                where: { threadId: input.threadId },
+                orderBy: { sentAt: "asc" },
+                select: {
+                    id: true,
+                    from: true,
+                    body: true,
+                    bodySnippet: true,
+                    emailLabel: true,
+                    subject: true,
+                    sentAt: true,
                 },
             });
 
             return {
-                data: data.slice(0, input.take),
-                done: data.length <= input.take,
-                nextCursor:
-                    data.length > input.take ? data[data.length - 1]?.id : null,
+                emails,
             };
         }),
     getReplyDetails: privateProcedure
@@ -187,6 +220,7 @@ export const threadRouter = createTRPCRouter({
         .mutation(async ({ ctx, input }) => {
             const account = new Account(ctx.account.accessToken);
             await account.sendEmail(input);
+            await account.syncEmails();
         }),
     send: privateProcedure
         .input(
@@ -206,5 +240,17 @@ export const threadRouter = createTRPCRouter({
         .mutation(async ({ ctx, input }) => {
             const account = new Account(ctx.account.accessToken);
             await account.sendEmail(input);
+            await account.syncEmails();
+        }),
+    sync: privateProcedure
+        .input(
+            type({
+                accountId: "string>1",
+            }),
+        )
+        .use(accountProtectionMiddleware)
+        .query(async ({ ctx }) => {
+            const account = new Account(ctx.account.accessToken);
+            await account.syncEmails();
         }),
 });

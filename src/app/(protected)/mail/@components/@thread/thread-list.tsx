@@ -37,7 +37,12 @@ export function ThreadList({ done }: ThreadListProps) {
     const [readyToRemove, setReadyToRemove] = useState(false);
     const [confirmDelete] = useLocalStorage(
         keys.LocalStorage.ConfirmOnDelete,
-        "true",
+        true,
+        {
+            deserializer(value) {
+                return value === "true";
+            },
+        },
     );
     const [tab] = useQueryState(...tabState);
     const {
@@ -47,7 +52,7 @@ export function ThreadList({ done }: ThreadListProps) {
         handleSelectAll,
         itemRefs,
     } = useThreadNavigation(threads, () => {
-        if (confirmDelete === "true") {
+        if (confirmDelete) {
             setReadyToRemove(true);
         }
         // TODO deletion logic
@@ -114,7 +119,7 @@ export function ThreadList({ done }: ThreadListProps) {
                     onDeselectAll={handleDeselectAll}
                     selectedThreads={selectedThreads}
                     onDelete={() => {
-                        if (confirmDelete === "true") {
+                        if (confirmDelete) {
                             setReadyToRemove(true);
                         }
                     }}
