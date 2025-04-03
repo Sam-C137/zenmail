@@ -2,6 +2,7 @@
 
 import React, { Component, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { RotateCcw } from "lucide-react";
 
 interface MailErrorPageProps {
     error: Error & { digest?: string };
@@ -15,8 +16,13 @@ export default function MailErrorPage({ error, reset }: MailErrorPageProps) {
 
     return (
         <main className="grid h-screen place-items-center">
-            <h1>Something went wrong.</h1>
-            <Button onClick={() => reset()}>Try again</Button>
+            <div className="flex flex-col gap-4 items-center">
+                <h1>Something went wrong.</h1>
+                <Button onClick={() => reset()} variant="ghost">
+                    <RotateCcw className="size-4" />
+                    Try again
+                </Button>
+            </div>
         </main>
     );
 }

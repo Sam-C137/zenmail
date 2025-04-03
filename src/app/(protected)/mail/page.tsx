@@ -9,6 +9,7 @@ import { validateRequest } from "@/server/session";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import KBar from "@/components/kbar";
+import { api } from "@/trpc/server";
 
 interface MailPageProps {
     searchParams: Promise<{
@@ -34,6 +35,10 @@ export default async function MailPage() {
             userId: user.id,
         },
     });
+
+    if (userAccount?.initialSyncStatus === "Completed") {
+        await api.thread.sync({ accountId: userAccount.id });
+    }
 
     return (
         <main>

@@ -110,7 +110,7 @@ export function MailContent({
                     minSize={30}
                     className="flex-1"
                 >
-                    <ThreadDisplay done={done} />
+                    <ThreadDisplay />
                 </ResizablePanel>
             </ResizablePanelGroup>
         </TooltipProvider>

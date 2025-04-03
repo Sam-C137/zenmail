@@ -20,9 +20,7 @@ import {
 } from "@/app/(protected)/mail/@components/@reply/attachment";
 import { type } from "arktype";
 import { AiComposeButton } from "@/app/(protected)/mail/@components/@reply/ai-compose-button";
-import { useGetThreads } from "@/hooks/api/use-get-threads";
 import { useQueryState } from "nuqs";
-import { doneState } from "@/lib/state";
 import { filterKeyEvents, htmlToText } from "@/lib/utils";
 import { useSession } from "@/app/session-provider";
 import { keys } from "@/lib/constants";
@@ -57,23 +55,20 @@ export function ReplyEditor({
     handleSend,
 }: ReplyEditorProps) {
     const device = useDeviceType();
-    const [done] = useQueryState(...doneState);
     const [expanded, setExpanded] = useState(defaultExpanded ?? false);
     const { user } = useSession();
     const { dropzone, onPaste, files } = useAttachment();
     const { selectedAccountId, selectedAccount } = useAccount();
-    const [activeThread] = useQueryState(keys.QueryParams.ActiveThread);
-    const { data: threads } = useGetThreads({ done });
-    const { data } = api.emailAddress.list.useQuery({
+    const [threadId] = useQueryState(keys.QueryParams.ActiveThread);
+    const { data: emailAddresses } = api.emailAddress.list.useQuery({
         accountId: selectedAccountId,
         query: "",
     });
-    const suggestions = data?.map((s) => s.address) ?? [];
-    const thread = useMemo(() => {
-        return threads?.pages
-            .flatMap((page) => page.data)
-            .find((thread) => thread.id === activeThread);
-    }, [activeThread, threads?.pages]);
+    const suggestions = emailAddresses?.map((s) => s.address) ?? [];
+    const [thread] = api.thread.getThread.useSuspenseQuery({
+        threadId: threadId ?? "",
+        accountId: selectedAccountId,
+    });
 
     const isButtonDisabled = () => {
         if (files.length > 0) return false;

@@ -10,21 +10,28 @@ import { ReplyBox } from "@/app/(protected)/mail/@components/@reply/reply-box";
 import { Suspense } from "react";
 import { AttachmentContextProvider } from "@/app/(protected)/mail/@components/@reply/attachment";
 import { keys } from "@/lib/constants";
+import { api } from "@/trpc/react";
+import { useLocalStorage } from "@/hooks/use-localstorage";
 
-interface ThreadDisplayProps {
-    done: boolean;
-}
-
-export function ThreadDisplay({ done }: ThreadDisplayProps) {
-    const [activeThread] = useQueryState(keys.QueryParams.ActiveThread);
-    const { data, isPending } = useGetThreads({ done });
-    const thread = data?.pages
-        .flatMap((page) => page.data)
-        .find((thread) => thread.id === activeThread);
+export function ThreadDisplay() {
+    const [threadId] = useQueryState(keys.QueryParams.ActiveThread);
+    const [accountId] = useLocalStorage(
+        keys.LocalStorage.SelectedAccountId,
+        "",
+    );
+    const { data: thread, isPending } = api.thread.getThread.useQuery(
+        {
+            accountId,
+            threadId: threadId ?? "",
+        },
+        {
+            enabled: !!threadId,
+        },
+    );
 
     if (isPending) return <ThreadDisplayLoading />;
 
-    if (!activeThread || !thread) {
+    if (!threadId || !thread) {
         return (
             <div className="h-full w-full">
                 <div className="flex items-center justify-center h-full w-full">
@@ -42,6 +49,7 @@ export function ThreadDisplay({ done }: ThreadDisplayProps) {
             <Separator />
             <ScrollArea>
                 <ScrollBar orientation="vertical" />
+                <ScrollBar orientation="horizontal" />
                 <Accordion
                     type="single"
                     defaultValue={thread.emails.at(0)?.id}
@@ -61,7 +69,7 @@ export function ThreadDisplay({ done }: ThreadDisplayProps) {
             <Separator className="mt-auto" />
             <Suspense fallback={<ReplyBoxLoading />}>
                 <AttachmentContextProvider>
-                    <ReplyBox key={activeThread} threadId={activeThread} />
+                    <ReplyBox key={threadId} threadId={threadId} />
                 </AttachmentContextProvider>
             </Suspense>
         </div>
