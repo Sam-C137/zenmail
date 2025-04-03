@@ -29,15 +29,25 @@ export function ThreadDisplay() {
         },
     );
 
-    if (isPending) return <ThreadDisplayLoading />;
-
-    if (!threadId || !thread) {
+    if (!threadId) {
         return (
             <div className="h-full w-full">
                 <div className="flex items-center justify-center h-full w-full">
                     <p className="text-muted-foreground">
                         Select a thread to view
                     </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (isPending) return <ThreadDisplayLoading />;
+
+    if (!thread) {
+        return (
+            <div className="h-full w-full">
+                <div className="flex items-center justify-center h-full w-full">
+                    <p className="text-muted-foreground">No thread found</p>
                 </div>
             </div>
         );
