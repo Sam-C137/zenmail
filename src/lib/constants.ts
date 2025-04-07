@@ -21,6 +21,7 @@ export const keys = {
         ActiveThread: "activeThread",
         Tab: "tab",
         Done: "done",
+        Search: "query",
     },
 } as const;
 
