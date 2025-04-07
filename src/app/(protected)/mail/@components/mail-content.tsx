@@ -18,6 +18,7 @@ import { Scrollbar } from "@radix-ui/react-scroll-area";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThreadDisplay } from "@/app/(protected)/mail/@components/@thread-display/thread-display";
 import { doneState } from "@/lib/state";
+import { SearchBar } from "@/app/(protected)/mail/@components/@navigation/search-bar";
 
 interface MailContentProps {
     defaultLayout?: [number, number, number];
@@ -91,7 +92,7 @@ export function MailContent({
                                 </TabsList>
                             </div>
                             <Separator />
-                            Search bar
+                            <SearchBar />
                         </div>
                         <ScrollArea className="h-full">
                             <Scrollbar />

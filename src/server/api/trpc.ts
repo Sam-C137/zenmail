@@ -120,10 +120,14 @@ export const accountProtectionMiddleware = t.middleware(
         if (values instanceof type.errors) {
             throw new Error("Account id is required");
         }
-        const account = await ctx.db.account.findFirst({
+        const { user } = await validateRequest();
+        if (!user) {
+            throw new Error("Not logged in");
+        }
+
+        const accounts = await ctx.db.account.findMany({
             where: {
-                id: values.accountId,
-                userId: ctx.user?.id,
+                userId: user.id,
             },
             select: {
                 id: true,
@@ -132,13 +136,16 @@ export const accountProtectionMiddleware = t.middleware(
                 accessToken: true,
             },
         });
-        if (!account) {
+
+        if (accounts.length < 1) {
             throw new Error("Account does not exist");
         }
         return next({
             ctx: {
                 ...ctx,
-                account,
+                account: accounts.find(
+                    (account) => account.id === values.accountId,
+                ),
             },
             input,
         });

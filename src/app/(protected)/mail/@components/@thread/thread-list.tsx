@@ -63,7 +63,7 @@ export function ThreadList({ done }: ThreadListProps) {
             isLoading={isFetching}
             hasMore={hasNextPage}
             next={fetchNextPage}
-            className="p-4 space-y-4 h-full"
+            className="p-4 pt-0 space-y-4 h-full"
         >
             <MotionConfig
                 transition={{ type: "spring", duration: 0.5, bounce: 0.2 }}
