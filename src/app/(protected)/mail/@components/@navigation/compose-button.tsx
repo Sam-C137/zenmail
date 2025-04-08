@@ -35,7 +35,7 @@ export function ComposeButton() {
     const [value, setValue] = useState("");
     const { toast } = useToast();
     const { selectedAccountId, selectedAccount } = useAccount();
-    const sendEmail = api.thread.send.useMutation();
+    const sendEmail = api.email.send.useMutation();
 
     const editor = useEditor({
         autofocus: false,
