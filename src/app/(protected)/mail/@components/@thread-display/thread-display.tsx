@@ -1,20 +1,21 @@
 import { useQueryState } from "nuqs";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetThreads } from "@/hooks/api/use-get-threads";
 import { ThreadDisplayHeader } from "@/app/(protected)/mail/@components/@thread-display/thread-display-header";
 import { Accordion } from "@/components/ui/accordion";
 import { ThreadDisplayEmail } from "@/app/(protected)/mail/@components/@thread-display/thread-display-email";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ReplyBox } from "@/app/(protected)/mail/@components/@reply/reply-box";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { AttachmentContextProvider } from "@/app/(protected)/mail/@components/@reply/attachment";
 import { keys } from "@/lib/constants";
 import { api } from "@/trpc/react";
 import { useLocalStorage } from "@/hooks/use-localstorage";
+import { useMarkAsRead } from "@/hooks/api/use-mark-as-read";
 
 export function ThreadDisplay() {
     const [threadId] = useQueryState(keys.QueryParams.ActiveThread);
+    const markAsRead = useMarkAsRead();
     const [accountId] = useLocalStorage(
         keys.LocalStorage.SelectedAccountId,
         "",
@@ -28,6 +29,16 @@ export function ThreadDisplay() {
             enabled: !!threadId,
         },
     );
+
+    useEffect(() => {
+        if (!thread) return;
+        const isUnread = new Set(
+            thread.emails.map((email) => email.sysLabels).flat(),
+        ).has("unread");
+        if (isUnread) {
+            markAsRead.mutate(thread.emails, true);
+        }
+    }, [thread]);
 
     if (!threadId) {
         return (

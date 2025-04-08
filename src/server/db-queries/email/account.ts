@@ -181,6 +181,15 @@ export class Account {
             deltaToken: savedToken,
         };
     }
+
+    public async updateEmailStatus(
+        payload: typeof schemas.updateEmailStatus.mutation.infer,
+    ) {
+        const { messageId, ...data } = payload;
+        await aurinkoApi.post(`/email/messages/${messageId}/status`, data, {
+            headers: { Authorization: `Bearer ${this.token}` },
+        });
+    }
 }
 
 const schemas = {
@@ -231,6 +240,14 @@ const schemas = {
                 "failedSteps?": "string[]",
                 "errorMessage?": "string|undefined",
             }),
+        }),
+    },
+    updateEmailStatus: {
+        mutation: type({
+            messageId: "string>0",
+            "unread?": "boolean|undefined",
+            "archived?": "boolean|undefined",
+            "keywords?": "string[]|undefined",
         }),
     },
 };

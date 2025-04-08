@@ -138,6 +138,7 @@ export const threadRouter = createTRPCRouter({
                     from: true,
                     body: true,
                     bodySnippet: true,
+                    sysLabels: true,
                     emailLabel: true,
                     subject: true,
                     sentAt: true,
@@ -242,26 +243,6 @@ export const threadRouter = createTRPCRouter({
             await account.sendEmail(input);
             await account.syncEmails();
         }),
-    send: privateProcedure
-        .input(
-            type({
-                "...": threadsSchema.pick("accountId"),
-                body: "string>1",
-                subject: "string>1",
-                from: EmailAddress,
-                to: EmailAddress.array(),
-                cc: EmailAddress.array().optional(),
-                bcc: EmailAddress.array().optional(),
-                replyTo: EmailAddress,
-                attachments: OutGoingEmailAttachment.array().optional(),
-            }),
-        )
-        .use(accountProtectionMiddleware)
-        .mutation(async ({ ctx, input }) => {
-            const account = new Account(ctx.account.accessToken);
-            await account.sendEmail(input);
-            await account.syncEmails();
-        }),
     sync: privateProcedure
         .input(
             type({
@@ -269,7 +250,7 @@ export const threadRouter = createTRPCRouter({
             }),
         )
         .use(accountProtectionMiddleware)
-        .query(async ({ ctx }) => {
+        .mutation(async ({ ctx }) => {
             const account = new Account(ctx.account.accessToken);
             await account.syncEmails();
         }),

@@ -4,14 +4,15 @@ import { cn, highlightMatches } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import DOMPurify from "isomorphic-dompurify";
+import * as React from "react";
 import { useMemo } from "react";
 import { Mail, MailOpen, Trash2Icon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion } from "motion/react";
-import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { useQueryState } from "nuqs";
 import { keys } from "@/lib/constants";
+import { useMarkAsRead } from "@/hooks/api/use-mark-as-read";
 
 interface ThreadItemProps {
     thread: RouterOutputs["thread"]["getThreads"]["data"][number];
@@ -21,8 +22,6 @@ interface ThreadItemProps {
     isSelected?: boolean;
     setIsSelected?: (threadId: string) => void;
     onDelete?: (id: string) => void;
-    onMarkAsRead?: (id: string) => void;
-    onMarkAsUnread?: (id: string) => void;
     isDeleting?: boolean;
 }
 
@@ -37,8 +36,6 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
             setIsSelected,
             onDelete,
             isDeleting,
-            onMarkAsRead,
-            onMarkAsUnread,
         },
         ref,
     ) => {
@@ -57,6 +54,18 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                 ),
             };
         }, [thread.emails]);
+        const isUnread = thread.sysLabels.includes("unread");
+        const markAsRead = useMarkAsRead();
+
+        const handleReadToggle = (read: boolean) => {
+            if (read) {
+                if (!isUnread) return;
+                markAsRead.mutate(thread.emails, true);
+            } else {
+                if (isUnread) return;
+                markAsRead.mutate(thread.emails, false);
+            }
+        };
 
         const overLay = useMemo(
             () => (
@@ -79,10 +88,11 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                             variant="ghost"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onMarkAsRead?.(thread.id);
+                                handleReadToggle(true);
                             }}
+                            disabled={markAsRead.isPending}
                             title="Mark as read"
-                            className="group-hover:bg-accent group-data-[checked=true]:opacity-0"
+                            className="group-hover:bg-accent disabled:cursor-not-allowed group-data-[checked=true]:opacity-0"
                         >
                             <MailOpen className="w-4 h-4" />
                         </Button>
@@ -90,10 +100,11 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                             variant="ghost"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onMarkAsUnread?.(thread.id);
+                                handleReadToggle(false);
                             }}
+                            disabled={markAsRead.isPending}
                             title="Mark as unread"
-                            className="group-hover:bg-accent group-data-[checked=true]:opacity-0"
+                            className="group-hover:bg-accent disabled:cursor-not-allowed group-data-[checked=true]:opacity-0"
                         >
                             <Mail className="w-4 h-4" />
                         </Button>
@@ -104,7 +115,8 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                                 onDelete?.(thread.id);
                             }}
                             title="Delete"
-                            className="group-hover:bg-accent group-data-[checked=true]:opacity-0  hover:text-destructive transition-all"
+                            disabled={markAsRead.isPending}
+                            className="group-hover:bg-accent disabled:cursor-not-allowed group-data-[checked=true]:opacity-0  hover:text-destructive transition-all"
                         >
                             <Trash2Icon className="w-4 h-4" />
                         </Button>
@@ -158,7 +170,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                                         ),
                                     }}
                                 />
-                                {thread.sysLabels.includes("unread") && (
+                                {isUnread && (
                                     <span className="flex h-2 w-2 rounded-full bg-blue-600" />
                                 )}
                             </div>
