@@ -7,6 +7,7 @@ import { type } from "arktype";
 import { type Prisma } from "@prisma/client";
 import { EmailAddress, OutGoingEmailAttachment } from "@/lib/email.types";
 import { Account } from "@/server/db-queries/email/account";
+import { OramaClient } from "@/lib/orama";
 
 const threadsSchema = type({
     accountId: "string>1",
@@ -43,6 +44,7 @@ export const threadRouter = createTRPCRouter({
                 "...": threadsSchema,
                 "cursor?": threadsSchema.get("accountId"),
                 "take?": type("undefined|number>0"),
+                "query?": type("undefined|string"),
                 done: "boolean=false",
             }),
         )
@@ -50,8 +52,26 @@ export const threadRouter = createTRPCRouter({
         .query(async ({ ctx, input }) => {
             input.take = input.take ?? 15;
 
+            let threadIds: string[] = [];
+
+            if (input.query) {
+                const orama = new OramaClient(ctx.account.id);
+                await orama.init();
+                const results = await orama.search(input.query);
+                threadIds = results.hits.map(
+                    (hit) => hit.document.threadId as string,
+                );
+            }
+
             const threads = await ctx.db.thread.findMany({
-                where: threadWhere(input.type, ctx.account.id),
+                where: {
+                    ...(!input.query
+                        ? threadWhere(input.type, ctx.account.id)
+                        : {
+                              id: { in: threadIds },
+                              accountId: ctx.account.id,
+                          }),
+                },
                 select: {
                     id: true,
                     subject: true,

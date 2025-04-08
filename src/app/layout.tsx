@@ -5,6 +5,7 @@ import { type Metadata } from "next";
 import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
+import { env } from "@/env";
 
 export function generateMetadata(): Metadata {
     const getTitlePrefix = () => {
@@ -20,8 +21,27 @@ export function generateMetadata(): Metadata {
             template: `${getTitlePrefix()} | %s | zenmail`,
             default: "zenmail | Stay Focused",
         },
+        metadataBase: new URL(env.NEXT_PUBLIC_URL),
         description: "The minimalistic email client",
-        icons: [{ rel: "icon", url: "/favicon.ico" }],
+        icons: [
+            { rel: "icon", url: "/favicon.ico" },
+            {
+                rel: "apple-touch-icon",
+                url: "/apple-touch-icon.png",
+                sizes: "180x180",
+            },
+            {
+                rel: "icon",
+                url: "/favicon-32x32.png",
+                sizes: "32x32",
+            },
+            {
+                rel: "icon",
+                url: "/favicon-16x16.png",
+                sizes: "16x16",
+            },
+        ],
+        manifest: `${env.NEXT_PUBLIC_URL}/site.webmanifest`,
     };
 }
 

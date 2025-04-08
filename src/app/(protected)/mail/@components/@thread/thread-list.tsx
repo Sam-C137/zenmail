@@ -15,12 +15,15 @@ import { MotionConfig } from "motion/react";
 import { useLocalStorage } from "@/hooks/use-localstorage";
 import { tabState } from "@/lib/state";
 import { keys } from "@/lib/constants";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface ThreadListProps {
     done: boolean;
 }
 
 export function ThreadList({ done }: ThreadListProps) {
+    const [search] = useQueryState(keys.QueryParams.Search);
+    const query = useDebounce(search ?? "", 500);
     const {
         data,
         isFetching,
@@ -29,7 +32,7 @@ export function ThreadList({ done }: ThreadListProps) {
         isPending,
         isFetchingNextPage,
         error,
-    } = useGetThreads({ done });
+    } = useGetThreads({ done, query });
     const threads = data?.pages.flatMap((page) => page.data);
     const [activeThread, setActiveThread] = useQueryState(
         keys.QueryParams.ActiveThread,
@@ -74,10 +77,21 @@ export function ThreadList({ done }: ThreadListProps) {
                     ))}
                 {threads && threads.length < 1 && !hasNextPage && (
                     <p className="text-center pt-[30vh] text-muted-foreground">
-                        <span className="block font-semibold">
-                            Nothing in {tab} 📭
-                        </span>
-                        Looks empty over here
+                        {!!search ? (
+                            <>
+                                <span className="block font-semibold">
+                                    Your search for &#34;{search}&#34; found no
+                                    results
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="block font-semibold">
+                                    Nothing in {tab} 📭
+                                </span>
+                                Looks empty over here
+                            </>
+                        )}
                     </p>
                 )}
                 {error && !threads && (

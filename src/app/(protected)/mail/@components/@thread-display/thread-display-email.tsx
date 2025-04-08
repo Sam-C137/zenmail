@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { useAccount } from "@/hooks/api/use-account";
 import { cn } from "@/lib/utils";
-import DOMPurify from "dompurify";
+import DOMPurify from "isomorphic-dompurify";
 import { useMemo } from "react";
 
 interface ThreadDisplayEmailProps {

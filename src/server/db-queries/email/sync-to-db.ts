@@ -67,11 +67,11 @@ export async function syncEmailsToDatabase(emails: Email[], accountId: string) {
                     );
                     await orama.insert({
                         subject: email.subject,
-                        body: email.body,
                         from: email.from.address,
                         to: email.to.map((to) => to.address),
                         sentAt: email.sentAt,
                         threadId: email.threadId,
+                        bodySnippet: email.bodySnippet,
                     });
                     if (result === null) {
                         allSuccessful = false;
@@ -108,18 +108,24 @@ async function upsertEmail(
     addressLookup: Map<string, Awaited<ReturnType<typeof upsertEmailAddress>>>,
 ) {
     try {
-        let label: EmailLabel = "inbox";
-        if (
-            email.sysLabels.includes("inbox") ||
-            email.sysLabels.includes("important")
-        ) {
-            label = "inbox";
-        } else if (email.sysLabels.includes("sent")) {
-            label = "sent";
-        } else if (email.sysLabels.includes("draft")) {
-            label = "draft";
-        } else if (email.sysLabels.includes("trash")) {
-            label = "trash";
+        let label: EmailLabel;
+        switch (true) {
+            case email.sysLabels.includes("inbox") ||
+                email.sysLabels.includes("important"):
+                label = "inbox";
+                break;
+            case email.sysLabels.includes("sent"):
+                label = "sent";
+                break;
+            case email.sysLabels.includes("draft"):
+                label = "draft";
+                break;
+            case email.sysLabels.includes("trash"):
+                label = "trash";
+                break;
+            default:
+                label = "inbox";
+                break;
         }
         const isDeleted = email.sysLabels.includes("trash");
 
