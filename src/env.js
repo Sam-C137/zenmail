@@ -42,7 +42,10 @@ export const env = createEnv({
         NEXT_PUBLIC_URL: process.env.VERCEL_URL
             ? `https://${process.env.VERCEL_URL}`
             : process.env.NEXT_PUBLIC_URL,
-        DATABASE_URL: process.env.DATABASE_URL,
+        DATABASE_URL:
+            process.env.NODE_ENV === "development"
+                ? process.env.PROD_DATABASE_URL
+                : process.env.DATABASE_URL,
         NODE_ENV: process.env.NODE_ENV,
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,

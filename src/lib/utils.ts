@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import DOMPurify from "dompurify";
+import DOMPurify from "isomorphic-dompurify";
 import { distance as levenshtein } from "./levenshtein-distance";
 
 export function cn(...inputs: ClassValue[]) {
@@ -121,4 +121,13 @@ export async function* streamAIOutput(stream: ReadableStream<Uint8Array>) {
             yield line.substring(3, line.length - 2).replace(/\\n/g, "\n");
         }
     }
+}
+
+export function highlightMatches(text: string, query?: string | null): string {
+    if (!query?.trim()) return text;
+    const regex = new RegExp(
+        `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+        "gi",
+    );
+    return text.replace(regex, '<mark class="inline bg-yellow-300">$1</mark>');
 }

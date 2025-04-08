@@ -28,12 +28,11 @@ export class OramaClient {
             this.orama = create({
                 schema: {
                     subject: "string",
-                    body: "string",
-                    raw: "string",
                     from: "string",
                     to: "string[]",
                     sentAt: "string",
                     threadId: "string",
+                    bodySnippet: "string",
                 },
             });
             await this.saveIndex();
@@ -70,9 +69,9 @@ export class OramaClient {
 
 const docSchema = type({
     subject: "string",
-    body: "string",
     from: "string",
     to: "string[]",
     sentAt: "string",
     threadId: "string",
+    bodySnippet: "string",
 });

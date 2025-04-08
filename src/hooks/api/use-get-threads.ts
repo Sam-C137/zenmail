@@ -9,9 +9,10 @@ import { keys } from "@/lib/constants";
 interface UseThreadsOptions {
     done: boolean;
     take?: number;
+    query?: string;
 }
 
-export function useGetThreads({ take, done }: UseThreadsOptions) {
+export function useGetThreads({ take, done, query }: UseThreadsOptions) {
     const [accountId] = useLocalStorage(
         keys.LocalStorage.SelectedAccountId,
         "",
@@ -24,6 +25,7 @@ export function useGetThreads({ take, done }: UseThreadsOptions) {
             type: tab,
             take,
             done,
+            query,
         },
         {
             getNextPageParam: (lastPage) => lastPage.nextCursor,

@@ -16,6 +16,7 @@ const googleUserClaims = type({
     email: "string.email",
     given_name: "string",
     "family_name?": "string",
+    "picture?": "string|undefined|null",
 });
 
 export async function GET(req: NextRequest) {
@@ -79,6 +80,7 @@ export async function GET(req: NextRequest) {
                 email,
                 firstName: validClaims.given_name,
                 lastName: validClaims.family_name,
+                imageUrl: validClaims.picture,
             },
         });
 

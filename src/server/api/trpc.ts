@@ -145,7 +145,7 @@ export const accountProtectionMiddleware = t.middleware(
                 ...ctx,
                 account: accounts.find(
                     (account) => account.id === values.accountId,
-                ),
+                )!,
             },
             input,
         });

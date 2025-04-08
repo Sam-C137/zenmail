@@ -1,15 +1,17 @@
 import type { RouterOutputs } from "@/trpc/react";
 import { format, formatDistanceToNow } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, highlightMatches } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import DOMPurify from "dompurify";
+import DOMPurify from "isomorphic-dompurify";
 import { useMemo } from "react";
 import { Mail, MailOpen, Trash2Icon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion } from "motion/react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { useQueryState } from "nuqs";
+import { keys } from "@/lib/constants";
 
 interface ThreadItemProps {
     thread: RouterOutputs["thread"]["getThreads"]["data"][number];
@@ -40,6 +42,7 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
         },
         ref,
     ) => {
+        const [query] = useQueryState(keys.QueryParams.Search);
         const dates = useMemo(() => {
             return {
                 category: format(
@@ -145,10 +148,16 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                     <div className="flex w-full flex-col gap-1">
                         <div className="flex items-center">
                             <div className="flex items-center gap-2">
-                                <h4 className="font-semibold">
-                                    {thread.emails.at(-1)?.from?.name ??
-                                        "Unknown Sender"}
-                                </h4>
+                                <h4
+                                    className="font-semibold"
+                                    dangerouslySetInnerHTML={{
+                                        __html: highlightMatches(
+                                            thread.emails.at(-1)?.from?.name ??
+                                                "Unknown Sender",
+                                            query,
+                                        ),
+                                    }}
+                                />
                                 {thread.sysLabels.includes("unread") && (
                                     <span className="flex h-2 w-2 rounded-full bg-blue-600" />
                                 )}
@@ -164,25 +173,36 @@ export const ThreadItem = React.forwardRef<HTMLDivElement, ThreadItemProps>(
                                 {dates.sentAt}
                             </div>
                         </div>
-                        <p className="text-xs !m-0 line-clamp-1 font-medium">
-                            {thread.emails.at(-1)?.subject}
-                        </p>
+                        <p
+                            className="text-xs !m-0 line-clamp-1 font-medium"
+                            dangerouslySetInnerHTML={{
+                                __html: highlightMatches(
+                                    thread.emails.at(-1)?.subject ?? "",
+                                    query,
+                                ),
+                            }}
+                        />
                     </div>
                     <p
                         className="line-clamp-2 !m-0 text-xs text-muted-foreground"
                         dangerouslySetInnerHTML={{
-                            __html: DOMPurify.sanitize(
-                                thread.emails
-                                    .at(-1)
-                                    ?.bodySnippet?.substring(0, 300)
-                                    ?.replace(/[\u200B-\u200F\uFEFF]/g, "") ??
-                                    "",
-                                {
-                                    USE_PROFILES: { html: true },
-                                },
+                            __html: highlightMatches(
+                                DOMPurify.sanitize(
+                                    thread.emails
+                                        .at(-1)
+                                        ?.bodySnippet?.substring(0, 300)
+                                        ?.replace(
+                                            /[\u200B-\u200F\uFEFF]/g,
+                                            "",
+                                        ) ?? "",
+                                    {
+                                        USE_PROFILES: { html: true },
+                                    },
+                                ),
+                                query,
                             ),
                         }}
-                    ></p>
+                    />
                     <div className="flex space-x-2">
                         {thread.sysLabels.map((label) => (
                             <Badge
