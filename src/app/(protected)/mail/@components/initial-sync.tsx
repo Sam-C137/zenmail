@@ -1,4 +1,3 @@
-import { db } from "@/server/db";
 import { Account } from "@/server/db-queries/email/account";
 import { type Account as Account$ } from "@prisma/client";
 import React from "react";
@@ -27,21 +26,6 @@ export async function InitialSync({
                 userAccount.id,
                 response.deltaToken,
             );
-
-            // const result = await syncEmailsToDatabase(
-            //     response.emails,
-            //     userAccount.id,
-            // );
-            // if (result !== null) {
-            //     await db.account.update({
-            //         where: {
-            //             accessToken: userAccount.accessToken,
-            //         },
-            //         data: {
-            //             nextDeltaToken: response.deltaToken,
-            //         },
-            //     });
-            // }
         } catch (e) {
             console.error("Failed to trigger initial sync", e);
             return (
