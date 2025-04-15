@@ -8,6 +8,8 @@ import { UserButton } from "@/app/(protected)/mail/@components/@navigation/user-
 import { ComposeButton } from "@/app/(protected)/mail/@components/@navigation/compose-button";
 import { AttachmentContextProvider } from "@/app/(protected)/mail/@components/@reply/attachment";
 import { keys } from "@/lib/constants";
+import { RagChat } from "@/app/(protected)/mail/@components/@navigation/rag-chat";
+import React from "react";
 
 interface SidebarProps {
     isCollapsed: boolean;
@@ -56,7 +58,8 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                 ]}
             />
             <div className="flex-1"></div>
-            <div className="flex flex-wrap gap-2">
+            {!isCollapsed && <RagChat />}
+            <div className="flex mb-4 flex-wrap gap-2">
                 <UserButton />
                 <ThemeToggle />
                 <AttachmentContextProvider>
