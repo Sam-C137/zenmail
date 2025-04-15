@@ -3,16 +3,25 @@
 import { api } from "@/trpc/react";
 import { useLocalStorage } from "@/hooks/use-localstorage";
 import { useIsomorphicLayoutEffect } from "@/hooks/use-Isomorphic-layout-effect";
-import { keys } from "@/lib/constants";
+import { keys, time } from "@/lib/constants";
 
 export function useAccount() {
-    const [accounts] = api.account.me.list.useSuspenseQuery(undefined, {
-        staleTime: Infinity,
-    });
     const [selectedAccountId, setSelectedAccountId] = useLocalStorage(
         keys.LocalStorage.SelectedAccountId,
         "",
     );
+    const [accounts] = api.account.me.list.useSuspenseQuery(undefined, {
+        staleTime: Infinity,
+        refetchInterval(query) {
+            const prev = query.state.data?.find(
+                (account) => account.id === selectedAccountId,
+            );
+            if (prev?.initialSyncStatus === "Partial") {
+                return time.Second * 20;
+            }
+            return undefined;
+        },
+    });
     const selectedAccount = accounts.find(
         (account) => account.id === selectedAccountId,
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
+import { InfoIcon, type LucideIcon } from "lucide-react";
 import type { EmailLabel } from "@prisma/client";
 import { useLocalStorage } from "@/hooks/use-localstorage";
 import {
@@ -14,7 +14,8 @@ import { api } from "@/trpc/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryState } from "nuqs";
 import { tabState } from "@/lib/state";
-import { keys } from "@/lib/constants";
+import { keys, time } from "@/lib/constants";
+import { useAccount } from "@/hooks/api/use-account";
 
 interface Link$ {
     title: string;
@@ -122,6 +123,7 @@ function ThreadCount({
     isActive,
     className,
 }: ThreadCountProps) {
+    const { selectedAccount } = useAccount();
     const { data, isPending } = api.thread.count.useQuery(
         {
             accountId,
@@ -130,6 +132,10 @@ function ThreadCount({
         {
             staleTime: Infinity,
             enabled: !!accountId,
+            refetchInterval:
+                selectedAccount?.initialSyncStatus === "Partial"
+                    ? time.Second * 20
+                    : undefined,
         },
     );
 
@@ -140,12 +146,22 @@ function ThreadCount({
     return (
         <span
             className={cn(
-                "ml-auto",
+                "ml-auto flex items-center gap-2",
                 isActive && "text-background dark:text-white",
                 className,
             )}
         >
             {data}
+            {selectedAccount?.initialSyncStatus === "Partial" && (
+                <Tooltip delayDuration={0}>
+                    <TooltipTrigger>
+                        <InfoIcon className="h-4 w-4" />
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                        Count may be inaccurate due to background sync
+                    </TooltipContent>
+                </Tooltip>
+            )}
         </span>
     );
 }

@@ -9,6 +9,7 @@ export const accountRouter = createTRPCRouter({
                     id: true,
                     emailAddress: true,
                     name: true,
+                    initialSyncStatus: true,
                 },
             });
         }),

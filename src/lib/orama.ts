@@ -2,6 +2,7 @@ import { create, insert, search, type AnyOrama } from "@orama/orama";
 import { db } from "@/server/db";
 import { persist, restore } from "@orama/plugin-data-persistence";
 import { type } from "arktype";
+import { genEmbedding } from "@/lib/embedding";
 
 export class OramaClient {
     private orama?: AnyOrama;
@@ -31,8 +32,12 @@ export class OramaClient {
                     from: "string",
                     to: "string[]",
                     sentAt: "string",
-                    threadId: "string",
+                    /**
+                     * removed to avoid slow insert and search, but inserts should include it
+                     * threadId: "string"
+                     */
                     bodySnippet: "string",
+                    embeddings: "vector[3072]",
                 },
             });
             await this.saveIndex();
@@ -59,6 +64,21 @@ export class OramaClient {
         });
     }
 
+    public async vectorSearch(term: string) {
+        if (!this.orama) throw new Error("Orama client not initialized");
+        const embeddings = await genEmbedding(term);
+        return search(this.orama, {
+            term,
+            mode: "hybrid",
+            vector: {
+                value: embeddings ?? [],
+                property: "embeddings",
+            },
+            similarity: 0.8,
+            limit: 10,
+        });
+    }
+
     public async insert(doc: typeof docSchema.infer) {
         if (!this.orama) throw new Error("Orama client not initialized");
         docSchema.assert(doc);
@@ -74,4 +94,5 @@ const docSchema = type({
     sentAt: "string",
     threadId: "string",
     bodySnippet: "string",
+    "embeddings?": "number[]|undefined",
 });

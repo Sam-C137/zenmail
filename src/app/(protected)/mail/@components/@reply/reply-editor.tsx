@@ -24,6 +24,7 @@ import { useQueryState } from "nuqs";
 import { filterKeyEvents, htmlToText } from "@/lib/utils";
 import { useSession } from "@/app/session-provider";
 import { keys } from "@/lib/constants";
+import { turndown } from "@/lib/turndown";
 
 interface ReplyEditorProps {
     value: string;
@@ -81,7 +82,7 @@ export function ReplyEditor({
     const aiContext = useMemo(() => {
         return (
             thread?.emails
-                .map((email) => htmlToText(email.body ?? ""))
+                .map((email) => turndown.turndown(email.body ?? ""))
                 .reduce((prev, curr, idx) => {
                     return (
                         prev +

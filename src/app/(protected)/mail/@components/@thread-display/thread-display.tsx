@@ -8,25 +8,26 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ReplyBox } from "@/app/(protected)/mail/@components/@reply/reply-box";
 import { Suspense, useEffect } from "react";
 import { AttachmentContextProvider } from "@/app/(protected)/mail/@components/@reply/attachment";
-import { keys } from "@/lib/constants";
+import { keys, time } from "@/lib/constants";
 import { api } from "@/trpc/react";
-import { useLocalStorage } from "@/hooks/use-localstorage";
 import { useMarkAsRead } from "@/hooks/api/use-mark-as-read";
+import { useAccount } from "@/hooks/api/use-account";
 
 export function ThreadDisplay() {
     const [threadId] = useQueryState(keys.QueryParams.ActiveThread);
     const markAsRead = useMarkAsRead();
-    const [accountId] = useLocalStorage(
-        keys.LocalStorage.SelectedAccountId,
-        "",
-    );
+    const { selectedAccount, selectedAccountId } = useAccount();
     const { data: thread, isPending } = api.thread.getThread.useQuery(
         {
-            accountId,
+            accountId: selectedAccountId,
             threadId: threadId ?? "",
         },
         {
             enabled: !!threadId,
+            refetchInterval:
+                selectedAccount?.initialSyncStatus === "Partial"
+                    ? time.Second * 20
+                    : undefined,
         },
     );
 
