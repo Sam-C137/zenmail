@@ -28,14 +28,17 @@ export async function queueEmails(
         delay: "30s",
     });
 
-    await client.publishJSON({
-        url: `${env.QSTASH_BASE_URL}/api/email/orama/sync`,
-        body: {
-            emails,
-            accountId,
-        },
-        delay: "30s",
-    });
+    /**
+     * disable temporarily to avoid burning through requests
+     * await client.publishJSON({
+     *         url: `${env.QSTASH_BASE_URL}/api/email/orama/sync`,
+     *         body: {
+     *             emails,
+     *             accountId,
+     *         },
+     *         delay: "30s",
+     *     });
+     */
 
     await db.account.update({
         where: { id: accountId },
