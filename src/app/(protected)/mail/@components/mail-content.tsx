@@ -71,7 +71,6 @@ export function MailContent({
                         </div>
                         <Separator />
                         <Sidebar isCollapsed={isCollapsed} />
-                        Ask AI
                     </div>
                 </ResizablePanel>
                 <ResizableHandle withHandle />
