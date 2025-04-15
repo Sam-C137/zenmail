@@ -1,8 +1,8 @@
 import { db } from "@/server/db";
 import { Account } from "@/server/db-queries/email/account";
-import { syncEmailsToDatabase } from "@/server/db-queries/email/sync-to-db";
 import { type Account as Account$ } from "@prisma/client";
 import React from "react";
+import { queueEmails } from "@/server/queue/email";
 
 interface InitialSyncProps {
     userAccount: Account$ | null;
@@ -22,20 +22,26 @@ export async function InitialSync({
                 return null;
             }
 
-            const result = await syncEmailsToDatabase(
+            await queueEmails(
                 response.emails,
                 userAccount.id,
+                response.deltaToken,
             );
-            if (result !== null) {
-                await db.account.update({
-                    where: {
-                        accessToken: userAccount.accessToken,
-                    },
-                    data: {
-                        nextDeltaToken: response.deltaToken,
-                    },
-                });
-            }
+
+            // const result = await syncEmailsToDatabase(
+            //     response.emails,
+            //     userAccount.id,
+            // );
+            // if (result !== null) {
+            //     await db.account.update({
+            //         where: {
+            //             accessToken: userAccount.accessToken,
+            //         },
+            //         data: {
+            //             nextDeltaToken: response.deltaToken,
+            //         },
+            //     });
+            // }
         } catch (e) {
             console.error("Failed to trigger initial sync", e);
             return (

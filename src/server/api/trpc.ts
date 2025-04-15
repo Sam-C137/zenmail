@@ -8,7 +8,6 @@
  */
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
-import { ZodError } from "zod";
 
 import { db } from "@/server/db";
 import { validateRequest } from "@/server/session";
@@ -49,9 +48,9 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
             ...shape,
             data: {
                 ...shape.data,
-                zodError:
-                    error.cause instanceof ZodError
-                        ? error.cause.flatten()
+                arkypeError:
+                    error.cause instanceof type.errors
+                        ? error.cause.message
                         : null,
             },
         };
@@ -143,9 +142,9 @@ export const accountProtectionMiddleware = t.middleware(
         return next({
             ctx: {
                 ...ctx,
-                account: accounts.find(
-                    (account) => account.id === values.accountId,
-                )!,
+                account: accounts
+                    .filter(Boolean)
+                    .find((account) => account.id === values.accountId)!,
             },
             input,
         });

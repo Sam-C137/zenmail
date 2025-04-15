@@ -23,6 +23,11 @@ export const env = createEnv({
         MICROSOFT_CLIENT_SECRET: z.string().min(1),
         RESEND_API_KEY: z.string().min(1),
         GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1),
+        QSTASH_URL: z.string().url(),
+        QSTASH_TOKEN: z.string().min(1),
+        QSTASH_CURRENT_SIGNING_KEY: z.string().min(1),
+        QSTASH_NEXT_SIGNING_KEY: z.string().min(1),
+        QSTASH_BASE_URL: z.string(),
     },
 
     /**
@@ -42,10 +47,7 @@ export const env = createEnv({
         NEXT_PUBLIC_URL: process.env.VERCEL_URL
             ? `https://${process.env.VERCEL_URL}`
             : process.env.NEXT_PUBLIC_URL,
-        DATABASE_URL:
-            process.env.NODE_ENV === "development"
-                ? process.env.PROD_DATABASE_URL
-                : process.env.DATABASE_URL,
+        DATABASE_URL: process.env.SECONDARY_DATABASE_URL,
         NODE_ENV: process.env.NODE_ENV,
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
@@ -59,6 +61,16 @@ export const env = createEnv({
         AURINKO_CLIENT_SECRET: process.env.AURINKO_CLIENT_SECRET,
         AURINKO_SIGNIN_SECRET: process.env.AURINKO_SIGNIN_SECRET,
         GOOGLE_GENERATIVE_AI_API_KEY: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+        QSTASH_URL: process.env.QSTASH_URL,
+        QSTASH_TOKEN: process.env.QSTASH_TOKEN,
+        QSTASH_CURRENT_SIGNING_KEY: process.env.QSTASH_CURRENT_SIGNING_KEY,
+        QSTASH_NEXT_SIGNING_KEY: process.env.QSTASH_NEXT_SIGNING_KEY,
+        QSTASH_BASE_URL:
+            process.env.NODE_ENV === "development"
+                ? process.env.QSTASH_LOCAL_URL
+                : process.env.VERCEL_URL
+                  ? `https://${process.env.VERCEL_URL}`
+                  : process.env.NEXT_PUBLIC_URL,
     },
     /**
      * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

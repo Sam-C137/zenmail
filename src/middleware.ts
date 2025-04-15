@@ -5,8 +5,8 @@ import { createProtectRouteMiddleware } from "@/middlewares/protect-route";
 
 const middlewares = [
     createExtendSessionMiddleware,
-    createCrsfMiddleware,
     createProtectRouteMiddleware,
+    createCrsfMiddleware,
 ];
 export default stackMiddlewares(middlewares);
 

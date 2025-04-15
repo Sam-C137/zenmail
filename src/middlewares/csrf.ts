@@ -1,10 +1,15 @@
 import { type MiddlewareFactory } from "@/middlewares/stack-middlewares";
 import { NextResponse } from "next/server";
+import { isPublicRoute, publicRoutes } from "@/middlewares/public-routes";
 
 export const createCrsfMiddleware: MiddlewareFactory = (next) => {
     return async function (request, event): Promise<NextResponse> {
         // Ignore for GET requests.
         if (request.method === "GET") {
+            return next(request, event) as NextResponse;
+        }
+
+        if (isPublicRoute(request.url)) {
             return next(request, event) as NextResponse;
         }
 

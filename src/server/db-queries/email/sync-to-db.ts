@@ -7,7 +7,6 @@ import type {
 import pLimit from "p-limit";
 import { type EmailLabel } from "@prisma/client";
 import { db } from "@/server/db";
-import { OramaClient } from "@/lib/orama";
 
 type Email = typeof EmailMessage.infer;
 type Address = typeof EmailAddress.infer;
@@ -15,10 +14,7 @@ type Attachment = typeof EmailAttachment.infer;
 
 export async function syncEmailsToDatabase(emails: Email[], accountId: string) {
     const limit = pLimit(7);
-    let allSuccessful = true;
     const processedThreadIds = new Set<string>();
-    const orama = new OramaClient(accountId);
-    await orama.init();
 
     try {
         const uniqueAddresses = new Map<string, Address>();
@@ -65,17 +61,7 @@ export async function syncEmailsToDatabase(emails: Email[], accountId: string) {
                         accountId,
                         addressLookup,
                     );
-                    await orama.insert({
-                        subject: email.subject,
-                        from: email.from.address,
-                        to: email.to.map((to) => to.address),
-                        sentAt: email.sentAt,
-                        threadId: email.threadId,
-                        bodySnippet: email.bodySnippet,
-                    });
-                    if (result === null) {
-                        allSuccessful = false;
-                    } else {
+                    if (result != null) {
                         processedThreadIds.add(email.threadId);
                     }
                 }),
@@ -88,13 +74,6 @@ export async function syncEmailsToDatabase(emails: Email[], accountId: string) {
                     limit(() => updateThreadDeletionStatus(threadId)),
                 ),
             );
-        }
-
-        if (allSuccessful) {
-            await db.account.update({
-                where: { id: accountId },
-                data: { initialSyncStatus: "Completed" },
-            });
         }
     } catch (e) {
         console.error("Error syncing emails to database", e);

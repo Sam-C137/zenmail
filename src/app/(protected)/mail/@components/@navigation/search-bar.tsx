@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { RotateCcw, Search, X } from "lucide-react";
+import { RefreshCcw, Search, X } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { keys } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,12 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAccount } from "@/hooks/api/use-account";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function SearchBar() {
     const [search, setSearch] = useQueryState(keys.QueryParams.Search);
     const sync = api.thread.sync.useMutation();
-    const { selectedAccountId } = useAccount();
+    const { selectedAccountId, selectedAccount } = useAccount();
     return (
         <div className="flex m-4 items-center gap-2 justify-between">
             <div className="relative flex-1">
@@ -41,7 +42,10 @@ export function SearchBar() {
                 </div>
             </div>
             <Tooltip>
-                <TooltipTrigger asChild>
+                <TooltipTrigger
+                    asChild
+                    disabled={selectedAccount?.initialSyncStatus === "Partial"}
+                >
                     <Button
                         variant="ghost"
                         size="icon"
@@ -56,7 +60,11 @@ export function SearchBar() {
                             });
                         }}
                     >
-                        <RotateCcw className="size-4 text-muted-foreground" />
+                        {selectedAccount?.initialSyncStatus === "Partial" ? (
+                            <Skeleton className="size-4" />
+                        ) : (
+                            <RefreshCcw className="size-4 text-muted-foreground" />
+                        )}
                         <span className="sr-only">Refresh mail</span>
                     </Button>
                 </TooltipTrigger>

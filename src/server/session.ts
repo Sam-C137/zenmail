@@ -49,7 +49,15 @@ export async function validateSessionToken(
             id: sessionId,
         },
         include: {
-            user: true,
+            user: {
+                select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    imageUrl: true,
+                },
+            },
         },
     });
 
@@ -87,7 +95,13 @@ export async function invalidateUserSessions(userId: number): Promise<void> {
 }
 
 export type SessionValidationResult =
-    | { session: Session; user: User }
+    | {
+          session: Session;
+          user: Omit<
+              User,
+              "passwordHash" | "googleId" | "githubId" | "microsoftId"
+          >;
+      }
     | { session: null; user: null };
 
 /**
