@@ -28,6 +28,7 @@ export const env = createEnv({
         QSTASH_CURRENT_SIGNING_KEY: z.string().min(1),
         QSTASH_NEXT_SIGNING_KEY: z.string().min(1),
         QSTASH_BASE_URL: z.string(),
+        STRIPE_SECRET_KEY: z.string().min(1),
     },
 
     /**
@@ -71,6 +72,7 @@ export const env = createEnv({
                 : process.env.VERCEL_URL
                   ? `https://${process.env.VERCEL_URL}`
                   : process.env.NEXT_PUBLIC_URL,
+        STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     },
     /**
      * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

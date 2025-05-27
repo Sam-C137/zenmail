@@ -4,7 +4,7 @@ import { type Session, type User } from "@prisma/client";
 import React from "react";
 
 type SessionContext = {
-    user: User;
+    user: Omit<User, "passwordHash" | "googleId" | "githubId" | "microsoftId">;
     session: Session;
 };
 

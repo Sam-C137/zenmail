@@ -10,6 +10,7 @@ import { AttachmentContextProvider } from "@/app/(protected)/mail/@components/@r
 import { keys } from "@/lib/constants";
 import { RagChat } from "@/app/(protected)/mail/@components/@navigation/rag-chat";
 import React from "react";
+import { PremiumBanner } from "@/app/(protected)/mail/@components/@navigation/premium-banner";
 
 interface SidebarProps {
     isCollapsed: boolean;
@@ -58,6 +59,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
                 ]}
             />
             <div className="flex-1"></div>
+            {!isCollapsed && <PremiumBanner />}
             {!isCollapsed && <RagChat />}
             <div className="flex mb-4 flex-wrap gap-2">
                 <UserButton />

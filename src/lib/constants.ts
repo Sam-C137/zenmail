@@ -25,6 +25,18 @@ export const keys = {
     },
 } as const;
 
+export const app = {
+    Feature: {
+        AiChat: {
+            FreeCreditsPerDay: 5,
+        },
+        Account: {
+            FreeAccounts: 1,
+            PremiumAccounts: 3,
+        },
+    },
+} as const;
+
 export const MimeTypes = {
     audio: {
         "audio/aac": [".aac"],
